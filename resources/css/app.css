@@ -28,8 +28,28 @@
 @utility safe-top { padding-top: env(safe-area-inset-top); }
 
 @keyframes amo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes amo-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 15% { transform: translateY(0) scale(1.08, .9); } 45% { transform: translateY(-14%) scale(.95, 1.06); } 70% { transform: translateY(0) scale(1.05, .95); } }
+@keyframes amo-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes amo-shake { 0%, 80%, 100% { transform: translateX(0); } 84%, 92% { transform: translateX(-3%); } 88%, 96% { transform: translateX(3%); } }
+@keyframes amo-pulse { 0%, 100% { transform: scale(1); } 20% { transform: scale(1.08); } 40% { transform: scale(.98); } 60% { transform: scale(1.05); } }
+@keyframes amo-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .97) translateY(1.5%); } }
+@keyframes amo-wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+@keyframes amo-spin { to { transform: rotate(360deg); } }
+@keyframes amo-wave-arm { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-35deg); } }
+@keyframes amo-coin-drop { 0% { transform: translateY(-6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
 .amo-bob { animation: amo-bob 3s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .amo-bob { animation: none; } }
+.amo-jump { animation: amo-jump .9s ease-in-out infinite; transform-origin: 50% 95%; }
+.amo-sway { animation: amo-sway 2.4s ease-in-out infinite; transform-origin: 50% 95%; }
+.amo-shake { animation: amo-shake 2.5s ease-in-out infinite; }
+.amo-pulse { animation: amo-pulse 1.4s ease-in-out infinite; }
+.amo-breathe { animation: amo-breathe 3.5s ease-in-out infinite; transform-origin: 50% 95%; }
+.amo-wobble { animation: amo-wobble 1.6s ease-in-out infinite; transform-origin: 50% 95%; }
+.amo-spin { animation: amo-spin 1.2s linear 1; }
+.amo-wave-arm { animation: amo-wave-arm .8s ease-in-out infinite; transform-box: view-box; transform-origin: 96px 66px; }
+.amo-coin-drop { animation: amo-coin-drop 1.6s ease-in infinite; }
+@media (prefers-reduced-motion: reduce) {
+    .amo-bob, .amo-jump, .amo-sway, .amo-shake, .amo-pulse, .amo-breathe, .amo-wobble, .amo-spin, .amo-wave-arm, .amo-coin-drop { animation: none; }
+}
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }

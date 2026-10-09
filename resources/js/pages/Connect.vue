@@ -50,7 +50,7 @@ async function connect() {
         </div>
         <div v-else-if="!preview" class="h-64 animate-pulse rounded-3xl bg-slate-200 dark:bg-slate-800" />
         <div v-else class="card p-6 text-center">
-            <Mascot :mood="preview.is_self ? 'thinking' : 'celebrate'" :size="96" class="mx-auto" bob />
+            <Mascot :mood="preview.is_self ? 'surprised' : 'love'" :size="96" class="mx-auto" bob />
             <template v-if="preview.is_self">
                 <h1 class="mt-2 text-xl font-bold">That's your own QR</h1>
                 <p class="mt-1 text-sm text-slate-500">Share it with friends so they can add you.</p>

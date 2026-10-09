@@ -41,7 +41,12 @@ const health = computed(() => {
     return { tone: 'good', label: 'On track', text: `You're spending ${money(s.daily_spend_rate)}/day on average. Nice.` };
 });
 
-const mood = computed(() => (!sync.online ? 'sleepy' : { good: 'happy', warning: 'thinking', danger: 'worried' }[health.value?.tone] || 'happy'));
+const mood = computed(() => {
+    if (!sync.online) return 'sleepy';
+    const s = d.value?.safe_to_spend;
+    if (health.value?.tone === 'good' && s?.daily_spend_rate && s.daily_spend_rate < s.daily_allowance * 0.6) return 'proud';
+    return { good: 'happy', warning: 'thinking', danger: 'worried' }[health.value?.tone] || 'happy';
+});
 
 const trendData = computed(() => d.value && {
     labels: d.value.trend.map((t) => monthLabel(t.month).split(' ')[0].slice(0, 3)),

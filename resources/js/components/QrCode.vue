@@ -23,7 +23,7 @@ watch(() => [props.value, props.badge], render);
     <div class="relative" :style="{ width: size + 'px', height: size + 'px' }">
         <div class="h-full w-full rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200" role="img" :aria-label="label" v-html="svg" />
         <span v-if="badge && svg" class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl bg-white p-0.5 ring-4 ring-white">
-            <Mascot :size="Math.round(size * 0.2)" />
+            <Mascot :size="Math.round(size * 0.2)" :interactive="false" />
         </span>
     </div>
 </template>

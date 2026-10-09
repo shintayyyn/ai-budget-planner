@@ -10,6 +10,9 @@ import { invalidateContext } from '../ai/assistant';
 import Icon from '../components/Icon.vue';
 import Sheet from '../components/Sheet.vue';
 import Mascot from '../components/Mascot.vue';
+import { MOODS_LIST } from '../mascot';
+
+const amoPick = ref('wave');
 import { sync, flush, dismissFailed } from '../sync';
 
 const auth = useAuth();
@@ -136,10 +139,26 @@ const gb = (b) => (b / 1024 ** 3).toFixed(2);
 
 <template>
     <div class="space-y-5">
+        <!-- Meet Amo -->
+        <section class="card">
+            <div class="flex items-center gap-4">
+                <Mascot :key="amoPick" :mood="amoPick" :size="92" bob />
+                <div class="min-w-0">
+                    <h2 class="font-semibold">Meet Amo</h2>
+                    <p class="text-sm text-slate-500">Amo reacts to your money: cheering when you save, worried before a shortfall, asleep when you're offline. Tap Amo anywhere for a surprise.</p>
+                </div>
+            </div>
+            <div class="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                <button v-for="m in MOODS_LIST" :key="m.key" class="flex shrink-0 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium ring-1" :class="amoPick === m.key ? 'bg-indigo-50 text-indigo-700 ring-indigo-300 dark:bg-indigo-950 dark:text-indigo-200' : 'text-slate-500 ring-slate-200 dark:ring-slate-700'" :aria-pressed="amoPick === m.key" @click="amoPick = m.key">
+                    <Mascot :mood="m.key" :size="44" :interactive="false" />{{ m.label }}
+                </button>
+            </div>
+        </section>
+
         <!-- Offline & sync -->
         <section id="sync" class="card">
             <div class="flex items-center gap-3">
-                <Mascot :mood="!sync.online ? 'sleepy' : sync.failed.length ? 'worried' : 'happy'" :size="52" />
+                <Mascot :mood="!sync.online ? 'sleepy' : sync.failed.length ? 'sad' : sync.pending.length ? 'saving' : 'happy'" :size="52" />
                 <div class="min-w-0 flex-1">
                     <h2 class="font-semibold">Offline & sync</h2>
                     <p class="text-sm text-slate-500">{{ sync.online ? 'Online' : 'Offline' }} · last synced {{ ago(sync.lastSync) }}</p>

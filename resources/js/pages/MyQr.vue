@@ -125,7 +125,7 @@ async function removeBuddy(b) {
         <div class="space-y-4">
             <section class="card flex flex-col items-center text-center">
                 <div class="flex items-center gap-2">
-                    <Mascot mood="celebrate" :size="56" bob />
+                    <Mascot mood="wink" :size="56" bob />
                     <div class="text-left">
                         <h2 class="text-lg font-bold">My Amotan QR</h2>
                         <p class="text-xs text-slate-500">Made for you automatically · works offline</p>

@@ -61,7 +61,7 @@ async function submit() {
     <div class="safe-top flex min-h-dvh flex-col bg-gradient-to-b from-indigo-600 to-violet-700 md:items-center md:justify-center md:p-6">
         <div class="px-6 pt-14 pb-10 text-white md:pt-0 md:text-center">
             <div class="mb-4 flex items-end gap-3 md:justify-center">
-                <Mascot :mood="isRegister ? 'celebrate' : 'happy'" :size="84" bob />
+                <Mascot :mood="isRegister ? 'excited' : 'wave'" :size="84" bob />
                 <p class="pb-2 text-2xl font-extrabold tracking-tight">Amotan</p>
             </div>
             <h1 class="text-3xl font-bold tracking-tight">Make it to payday,<br />every time.</h1>

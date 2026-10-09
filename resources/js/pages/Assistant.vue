@@ -117,7 +117,7 @@ onMounted(scrollDown);
 
         <div ref="scroller" class="-mx-4 flex-1 space-y-3 overflow-y-auto px-4 pb-4 md:-mx-2 md:px-2">
             <div v-if="!messages.length" class="pt-4 text-center">
-                <Mascot mood="happy" :size="88" bob class="mx-auto mb-2" />
+                <Mascot mood="wave" :size="88" bob class="mx-auto mb-2" />
                 <h2 class="text-lg font-semibold">Hi, I'm Amo</h2>
                 <p class="mx-auto max-w-xs text-sm text-slate-500">Ask me about your spending, savings and whether you can afford something, or just tell me what you spent.</p>
                 <div class="mt-5 flex flex-wrap justify-center gap-2">
@@ -141,6 +141,7 @@ onMounted(scrollDown);
             </div>
         </div>
 
+        <div v-if="busy" class="flex items-center gap-2 pb-2 text-xs text-slate-500"><Mascot mood="thinking" :size="34" action="bob" :interactive="false" />Amo is thinking…</div>
         <form class="flex items-end gap-2 border-t border-slate-200 bg-slate-50 pt-3 pb-3 dark:border-slate-800 dark:bg-slate-950" @submit.prevent="send()">
             <textarea v-model="input" rows="1" class="input max-h-32 resize-none !rounded-2xl" placeholder='Ask anything or "spent 12 on lunch"' aria-label="Message" @keydown.enter.exact.prevent="send()" />
             <button class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white disabled:opacity-40" :disabled="!input.trim() || busy" aria-label="Send"><Icon name="send" size="20" /></button>

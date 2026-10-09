@@ -47,7 +47,7 @@ onBeforeUnmount(() => clearInterval(timer));
     <section class="card flex h-[60vh] flex-col !p-0">
         <div ref="list" class="flex-1 space-y-2 overflow-y-auto p-4" aria-live="polite">
             <div v-if="loaded && !messages.length && !waiting.length" class="py-8 text-center">
-                <Mascot mood="happy" :size="64" class="mx-auto" />
+                <Mascot mood="wave" :size="64" class="mx-auto" />
                 <p class="mt-2 text-sm text-slate-500">Say hi to your barkada! Plan who brings what, share updates, cheer each other on.</p>
             </div>
             <div v-for="m in messages" :key="m.id" class="flex" :class="m.mine ? 'justify-end' : 'justify-start'">

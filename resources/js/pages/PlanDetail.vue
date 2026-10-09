@@ -228,7 +228,7 @@ const color = (id) => COLORS[id % COLORS.length];
             <!-- Fair share -->
             <section v-if="plan.fair" class="card">
                 <div class="flex items-start gap-3">
-                    <Mascot :mood="plan.fair.gap > 0 ? 'thinking' : 'happy'" :size="52" />
+                    <Mascot :mood="plan.fair.gap > 0 ? 'thinking' : 'proud'" :size="52" />
                     <div class="min-w-0 flex-1">
                         <h2 class="font-semibold">Fair share</h2>
                         <p class="text-sm text-slate-500">Split by what each person can comfortably give. Everyone's amount stays private.</p>

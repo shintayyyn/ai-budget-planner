@@ -87,7 +87,7 @@ const chartOptions = { interaction: { mode: 'index', intersect: false }, plugins
             </section>
 
             <section class="card flex items-center gap-4" :class="r.firstShortfall ? 'ring-rose-200 dark:ring-rose-900' : 'ring-emerald-200 dark:ring-emerald-900'">
-                <Mascot :mood="r.firstShortfall ? 'worried' : 'celebrate'" :size="76" bob />
+                <Mascot :mood="r.firstShortfall ? (r.dominoes.length > 3 ? 'dizzy' : 'worried') : 'cool'" :size="76" bob />
                 <div class="min-w-0">
                     <template v-if="r.firstShortfall">
                         <p class="text-sm text-slate-500">First domino falls on</p>
