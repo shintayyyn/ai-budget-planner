@@ -4,6 +4,7 @@
 import { api } from '../api';
 import { money, niceDate, daysUntil, today } from '../format';
 import { detectIntent, parseTransaction } from './parse';
+import { simulate, paycheckAmount } from '../sim/domino';
 import { llmReady, complete, completeJSON } from './engine';
 
 let cache = null;
@@ -25,7 +26,8 @@ Rules:
 - Keep answers short: 2-4 sentences, or up to 4 short bullet points.
 - Be warm, practical and non-judgemental. End with one concrete next step when useful.
 - You are not a licensed financial advisor. For investing, tax or legal questions give general education only and suggest a professional.
-- If FACTS do not contain the answer, say what you can see and suggest where in the app to look.`;
+- If FACTS do not contain the answer, say what you can see and suggest where in the app to look.
+About Amotan (answer app questions from this only): works offline and syncs changes to the cloud when online; every user has an auto-generated personal QR code (My QR & buddies) to add buddies; Domino Check simulates late salary or surprise expenses; group plans have chat, notes, calendar, fair-share contributions and settle-up; the AI and receipt scanning run on the device.`;
 
 /** Compact overview handed to the model for open-ended questions. */
 function overview(ctx) {
@@ -43,7 +45,44 @@ function overview(ctx) {
     ].join('\n');
 }
 
+const APP_HELP = {
+    offline: { text: "Amotan works without internet. Everything you've opened is saved on this phone, and anything you add offline (expenses, bills, goals, plan entries, chat messages) waits in an outbox. When you're back online it syncs to the cloud automatically, and each change is saved only once. Settings → Offline & sync shows what's still waiting.", link: { to: '/settings#sync', label: 'Offline & sync' } },
+    qr: { text: "Your personal QR code is made for you automatically (it looks like AMO-XXXXXX). Open My QR & buddies to share it as an image, save it, or copy the link. When a friend scans it, you become buddies and can invite each other to group plans in one tap, without sharing emails. Buddies only see your name, never your money.", link: { to: '/me/qr', label: 'My QR & buddies' } },
+    plans: { text: 'Group plans are for barkada trips, ambagan and shared goals. Each plan has a chat room, shared notes, a calendar for dates and deadlines, and a fair-share calculator: everyone privately sets what they can comfortably give, and nobody sees anyone else\'s amount. At the end, settle up with the fewest payments.', link: { to: '/plans', label: 'Open plans' } },
+    privacy: { text: "I run on your phone. Your balance, transactions and receipts are processed on this device and never sent to a cloud AI company. Your data syncs only to your own Amotan account so you can log in on another phone, and logging out wipes this device.", link: { to: '/settings', label: 'Settings' } },
+    about: { text: "I'm Amo, your Amotan money buddy! I can tell you how much is safe to spend until payday, check if you can afford something, show where your money went, track goals, debts and your payday plan, and run a Domino Check (\"what if my salary is 5 days late?\"). You can also just tell me what you spent, like \"lunch 120\".", link: null },
+};
+
 const handlers = {
+    async app(ctx, intent) {
+        const h = APP_HELP[intent.topic] || APP_HELP.about;
+        return { facts: { app_help: h.text }, fallback: h.text, link: h.link };
+    },
+
+    async whatif(ctx, intent) {
+        const s = ctx.safe_to_spend;
+        const r = simulate({
+            today: ctx.today || today(),
+            balance: s.balance,
+            nextPayday: s.next_payday,
+            payFrequency: ctx.user.pay_frequency,
+            paycheck: paycheckAmount(ctx.user.monthly_income, ctx.user.pay_frequency),
+            bills: ctx.bills.filter((b) => b.due_day),
+            dailySpend: s.daily_spend_rate || Math.max(0, s.daily_allowance),
+            shocks: intent.shocks,
+        });
+        const sh = intent.shocks;
+        const scenario = [sh.salaryDelayDays && `your pay arrives ${sh.salaryDelayDays} days late`, sh.surpriseAmount && `a surprise ${money(sh.surpriseAmount)} expense hits`, sh.billIncreasePct && `bills go up ${sh.billIncreasePct}%`, sh.incomeCutPct && `income drops ${sh.incomeCutPct}%`].filter(Boolean).join(' and ') || 'nothing changes';
+        let fallback;
+        if (r.firstShortfall) {
+            const chain = r.dominoes.filter((d) => d.type === 'bill').slice(0, 3).map((d) => d.label).join(', ');
+            fallback = `If ${scenario}, you'd go short on ${niceDate(r.firstShortfall.date)} by ${money(-r.firstShortfall.balance)}${chain ? `, after ${chain}` : ''}. A buffer of ${money(r.bufferNeeded)} would cover it, or spend about ${money(r.suggestions[0].amount)}/day less until then.`;
+        } else {
+            fallback = `If ${scenario}, you'd still make it. Your lowest point would be ${money(r.lowest.balance)} on ${niceDate(r.lowest.date)}.`;
+        }
+        return { facts: { domino_check: { scenario, first_short_day: r.firstShortfall?.date ?? null, short_by: r.firstShortfall ? -r.firstShortfall.balance : 0, buffer_needed: r.bufferNeeded, lowest: r.lowest } }, fallback, link: { to: '/plan/domino', label: 'Open Domino Check' } };
+    },
+
     async afford(ctx, intent) {
         const a = await api.post('/ai/affordability', { amount: intent.amount, monthly: intent.monthly });
         const verdictText = { yes: 'Yes, you can afford it', caution: 'You can, but it will be tight', no: "I'd hold off for now" }[a.verdict];

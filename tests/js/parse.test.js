@@ -67,6 +67,22 @@ describe('detectIntent', () => {
         ['hello', 'general'],
     ])('%s -> %s', (text, type) => expect(detectIntent(text).type).toBe(type));
 
+    it.each([
+        ['What if my salary is 7 days late?', 'whatif'],
+        ['what if I get a surprise expense of 3000', 'whatif'],
+        ['Does this work without internet?', 'app'],
+        ['How do I share my QR code?', 'app'],
+        ['how does fair share work in barkada plans', 'app'],
+        ['Is my data private?', 'app'],
+        ['What is Amotan?', 'app'],
+    ])('%s -> %s', (text, type) => expect(detectIntent(text).type).toBe(type));
+
+    it('reads what-if shocks', () => {
+        expect(detectIntent('what if my salary is 7 days late').shocks).toMatchObject({ salaryDelayDays: 7, surpriseAmount: 0 });
+        expect(detectIntent('what if a surprise hospital bill of 5000 comes').shocks.surpriseAmount).toBe(5000);
+        expect(detectIntent('how do I share my QR code?').topic).toBe('qr');
+    });
+
     it('flags monthly affordability', () => {
         expect(detectIntent('can I afford a 40 monthly subscription').monthly).toBe(true);
     });

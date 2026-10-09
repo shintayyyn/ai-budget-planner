@@ -368,7 +368,8 @@ class FinanceService
                 'target_date' => $g->target_date?->toDateString(),
             ] + $this->goalProjection($g))->all(),
             'bills' => $user->bills->map(fn ($b) => [
-                'name' => $b->name, 'amount' => $b->amount, 'due_day' => $b->due_day, 'is_debt' => $b->is_debt,
+                'id' => $b->id, 'name' => $b->name, 'amount' => $b->amount, 'due_day' => $b->due_day, 'is_debt' => $b->is_debt,
+                'last_paid_on' => $b->last_paid_on?->toDateString(),
                 'debt_balance' => $b->debt_balance, 'interest_rate' => $b->interest_rate,
             ])->all(),
             'shared_plans' => $user->sharedPlans()->get()->map(function ($p) {

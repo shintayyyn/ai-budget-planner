@@ -95,6 +95,20 @@ export function detectIntent(text) {
     if (amount && !question && (/\b(spent|paid|bought|cost|log|add|earned|received|got paid)\b/.test(t) || t.split(/\s+/).length <= 6)) {
         return { type: 'log' };
     }
+    if (/\b(what if|domino|stress.?test|late|delayed|delay)\b/.test(t) && /\b(salary|sweldo|pay|payday|paycheck|income|bill|expense|emergency|surprise)\b/.test(t)) {
+        const days = Number(t.match(/(\d+)\s*days?/)?.[1]) || (/\b(late|delay)/.test(t) ? 5 : 0);
+        const surprise = /\b(surprise|emergency|unexpected|hospital|repair)\b/.test(t) && amount && !new RegExp(`\\b${amount}\\s*days?`).test(t) ? amount : 0;
+        const pct = Number(t.match(/(\d+)\s*%/)?.[1]) || 0;
+        return { type: 'whatif', shocks: { salaryDelayDays: days, surpriseAmount: surprise, billIncreasePct: /bill/.test(t) ? pct : 0, incomeCutPct: /(income|salary|pay) (cut|drop)/.test(t) ? pct : 0 } };
+    }
+    const topic = [
+        ['offline', /\b(offline|no (internet|signal|data)|without internet|sync|syncing|cloud)\b/],
+        ['qr', /\b(qr|buddy|buddies|share code|my code|add (a )?friend)\b/],
+        ['plans', /\b(barkada|group plan|shared plan|chat|notes?|calendar|fair.?share|ambagan|split the bill|settle up)\b/],
+        ['privacy', /\b(privacy|private|my data|local ai|on.?device|is (it|my data) safe|secure)\b/],
+        ['about', /\b(what is amotan|about (this )?app|who are you|what can you do|help|features|what is amo)\b/],
+    ].find(([, re]) => re.test(t));
+    if (topic) return { type: 'app', topic: topic[0] };
     if (/\b(safe to spend|left (until|till|before) (payday|pay day)|daily (allowance|limit|budget)|per day|run out|last (until|till)|how much (can|do) i (have|spend)|money left)\b/.test(t)) {
         return { type: 'safe' };
     }

@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -15,13 +17,13 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
+            'name' => ['required', 'string', 'min:2', 'max:60', "regex:/^\\p{L}[\\p{L} .'-]*$/u"],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->max(72)->letters()->numbers()],
             'device' => 'nullable|string|max:100',
         ]);
 
-        $user = User::create($data);
+        $user = User::create(['email' => Str::lower($data['email'])] + $data);
         Category::seedDefaultsFor($user);
 
         return response()->json([
