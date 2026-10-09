@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+@layer base {
+    html { -webkit-tap-highlight-color: transparent; }
+    body { overscroll-behavior-y: none; }
+    input, select, textarea { font-size: 16px; } /* prevents iOS zoom on focus */
+}
+
+@utility card { @apply rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-900 dark:ring-slate-800; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[.98] disabled:pointer-events-none disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-indigo-600 text-white hover:bg-indigo-500; }
+@utility btn-ghost { @apply btn bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700; }
+@utility btn-danger { @apply btn bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/50 dark:text-rose-300; }
+@utility input { @apply w-full rounded-xl border-0 bg-slate-100 px-3.5 py-2.5 text-slate-900 ring-1 ring-transparent outline-none placeholder:text-slate-400 focus:bg-white focus:ring-indigo-500 dark:bg-slate-800 dark:text-slate-100 dark:focus:bg-slate-900; }
+@utility label { @apply mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400; }
+@utility chip { @apply rounded-full px-3 py-1.5 text-sm font-medium transition; }
+@utility safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+@utility safe-top { padding-top: env(safe-area-inset-top); }
