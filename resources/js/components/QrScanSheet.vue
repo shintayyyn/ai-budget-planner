@@ -1,11 +1,12 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue';
 import Sheet from './Sheet.vue';
+import { parseBuddyCode } from '../qr';
 
 // In-app QR scanning with the browser's built-in BarcodeDetector (on-device).
 // Where it's unsupported, people can scan with their camera app or type the code.
-const props = defineProps({ open: Boolean });
-const emit = defineEmits(['close', 'code']);
+const props = defineProps({ open: Boolean, title: { type: String, default: 'Scan QR' } });
+const emit = defineEmits(['close', 'code', 'buddy']);
 const video = ref(null);
 const error = ref('');
 let stream = null;
@@ -22,6 +23,11 @@ async function start() {
             try {
                 const [hit] = await detector.detect(video.value);
                 if (!hit) return;
+                const buddy = parseBuddyCode(hit.rawValue);
+                if (buddy) {
+                    stop();
+                    return emit('buddy', buddy);
+                }
                 const m = hit.rawValue.match(/\/join\/([A-Z0-9]{6,12})/i) || hit.rawValue.match(/^([A-Z0-9]{6,12})$/i);
                 if (m) {
                     stop();
@@ -45,11 +51,11 @@ onBeforeUnmount(stop);
 </script>
 
 <template>
-    <Sheet :open="open" title="Scan invite QR" @close="stop(); emit('close')">
+    <Sheet :open="open" :title="title" @close="stop(); emit('close')">
         <div class="overflow-hidden rounded-2xl bg-black">
             <video ref="video" class="aspect-square w-full object-cover" playsinline muted />
         </div>
         <p v-if="error" class="mt-3 text-sm text-rose-600">{{ error }}</p>
-        <p v-else class="mt-3 text-center text-sm text-slate-500">Point your camera at the plan's QR code.</p>
+        <p v-else class="mt-3 text-center text-sm text-slate-500">Point your camera at a plan invite or a friend's Amotan QR.</p>
     </Sheet>
 </template>

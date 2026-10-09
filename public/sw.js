@@ -1,5 +1,5 @@
-/* AI Budget Planner service worker: offline app shell, cached OCR engine, and last-known API data. */
-const VERSION = 'v1';
+/* Amotan service worker (offline-first): offline app shell, cached OCR engine, and last-known API data. */
+const VERSION = 'v2';
 const SHELL = `shell-${VERSION}`;
 const STATIC = `static-${VERSION}`;
 const DATA = `data-${VERSION}`;
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(fetch(request).then((res) => {
             if (res.ok) caches.open(DATA).then((c) => c.put(request, res.clone()));
             return res;
-        }).catch(async () => (await caches.match(request)) || new Response(JSON.stringify({ message: 'You are offline.' }), { status: 503, headers: { 'Content-Type': 'application/json' } })));
+        }).catch(async () => (await caches.match(request)) || new Response(JSON.stringify({ message: 'You are offline.' }), { status: 503, headers: { 'Content-Type': 'application/json', 'X-Amotan-Offline': '1' } })));
         return;
     }
 

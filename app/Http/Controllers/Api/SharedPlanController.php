@@ -86,8 +86,15 @@ class SharedPlanController extends Controller
     {
         $plan = $this->memberPlan($request, $id);
         $this->ensureGroup($plan);
-        $data = $request->validate(['emails' => 'required|array|min:1|max:20', 'emails.*' => 'email|max:255']);
-        $added = $this->createInvites($plan, $request->user(), $data['emails']);
+        $data = $request->validate([
+            'emails' => 'required_without:user_ids|array|max:20',
+            'emails.*' => 'email|max:255',
+            'user_ids' => 'required_without:emails|array|max:20',
+            'user_ids.*' => 'integer',
+        ]);
+        // Buddies (connected by QR) can be invited without knowing their email.
+        $buddyEmails = $request->user()->buddies()->whereIn('users.id', $data['user_ids'] ?? [])->pluck('email')->all();
+        $added = $this->createInvites($plan, $request->user(), array_merge($data['emails'] ?? [], $buddyEmails));
 
         return ['invited' => $added, 'plan' => $this->detail($plan, $request->user())];
     }
@@ -155,6 +162,28 @@ class SharedPlanController extends Controller
         $this->alerts->refresh($user);
 
         return response()->noContent();
+    }
+
+    /** My private fair-share settings: monthly comfort amount (never shown to others) and an anonymous pause. */
+    public function updateMe(Request $request, int $id)
+    {
+        $plan = $this->memberPlan($request, $id);
+        $data = $request->validate([
+            'capacity' => 'sometimes|nullable|numeric|min:0|max:100000000',
+            'paused' => 'sometimes|boolean',
+        ]);
+        $pivot = [];
+        if (array_key_exists('capacity', $data)) {
+            $pivot['capacity'] = $data['capacity'];
+        }
+        if (array_key_exists('paused', $data)) {
+            $pivot['paused_until'] = $data['paused'] ? Carbon::today()->endOfMonth()->toDateString() : null;
+        }
+        if ($pivot) {
+            $plan->members()->updateExistingPivot($request->user()->id, $pivot);
+        }
+
+        return $this->detail($plan, $request->user());
     }
 
     public function leave(Request $request, int $id)
@@ -298,6 +327,7 @@ class SharedPlanController extends Controller
             'join_url' => $plan->visibility === 'group' ? $plan->joinUrl() : null,
             'invite_code' => $plan->visibility === 'group' ? $plan->invite_code : null,
             'summary' => $this->plans->summary($plan),
+            'fair' => $plan->visibility === 'group' ? $this->plans->fairPlan($plan, $user) : null,
             'items' => $plan->items()->with(['user:id,name', 'toUser:id,name'])->latest('occurred_on')->latest('id')->limit(200)->get()
                 ->map(fn ($i) => $i->toArray() + ['mine' => in_array($user->id, [$i->user_id, $i->to_user_id], true)]),
             'tasks' => $plan->tasks()->with('assignee:id,name')->orderBy('done')->orderBy('id')->get(),

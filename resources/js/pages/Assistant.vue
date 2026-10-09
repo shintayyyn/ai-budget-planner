@@ -7,6 +7,7 @@ import { money, niceDate, pref, setPref } from '../format';
 import { answer, invalidateContext } from '../ai/assistant';
 import { ai, llmReady } from '../ai/engine';
 import Icon from '../components/Icon.vue';
+import Mascot from '../components/Mascot.vue';
 import AiModelCard from '../components/AiModelCard.vue';
 
 const ui = useUi();
@@ -116,8 +117,8 @@ onMounted(scrollDown);
 
         <div ref="scroller" class="-mx-4 flex-1 space-y-3 overflow-y-auto px-4 pb-4 md:-mx-2 md:px-2">
             <div v-if="!messages.length" class="pt-4 text-center">
-                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white"><Icon name="sparkles" size="28" /></div>
-                <h2 class="text-lg font-semibold">Hi, I'm Penny</h2>
+                <Mascot mood="happy" :size="88" bob class="mx-auto mb-2" />
+                <h2 class="text-lg font-semibold">Hi, I'm Amo</h2>
                 <p class="mx-auto max-w-xs text-sm text-slate-500">Ask me about your spending, savings and whether you can afford something, or just tell me what you spent.</p>
                 <div class="mt-5 flex flex-wrap justify-center gap-2">
                     <button v-for="s in suggestions" :key="s" class="chip bg-white text-left ring-1 ring-slate-200 hover:ring-indigo-400 dark:bg-slate-900 dark:ring-slate-700" @click="send(s)">{{ s }}</button>

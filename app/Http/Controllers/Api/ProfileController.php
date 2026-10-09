@@ -43,6 +43,14 @@ class ProfileController extends Controller
         return ['user' => $user, 'budget' => $generator->generate($user)];
     }
 
+    /** New personal QR code; old QR images stop working. */
+    public function regenerateShareCode(Request $request)
+    {
+        $request->user()->regenerateShareCode();
+
+        return $request->user()->fresh();
+    }
+
     public function destroy(Request $request)
     {
         $request->validate(['password' => 'required|string']);

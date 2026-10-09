@@ -44,7 +44,7 @@ class SharedPlan extends Model
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'shared_plan_members')->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class, 'shared_plan_members')->withPivot('role', 'capacity', 'paused_until')->withTimestamps();
     }
 
     public function invites(): HasMany

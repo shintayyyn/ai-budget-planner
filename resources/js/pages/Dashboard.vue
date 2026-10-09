@@ -7,6 +7,8 @@ import { money, niceDate, monthLabel } from '../format';
 import Icon from '../components/Icon.vue';
 import Progress from '../components/Progress.vue';
 import Chart from '../components/Chart.vue';
+import Mascot from '../components/Mascot.vue';
+import { sync } from '../sync';
 
 const ui = useUi();
 const auth = useAuth();
@@ -38,6 +40,8 @@ const health = computed(() => {
     if (!s.daily_spend_rate) return { tone: 'good', label: 'On track', text: `Keep it to ${money(Math.max(0, s.daily_allowance))}/day. Log expenses to track your pace.` };
     return { tone: 'good', label: 'On track', text: `You're spending ${money(s.daily_spend_rate)}/day on average. Nice.` };
 });
+
+const mood = computed(() => (!sync.online ? 'sleepy' : { good: 'happy', warning: 'thinking', danger: 'worried' }[health.value?.tone] || 'happy'));
 
 const trendData = computed(() => d.value && {
     labels: d.value.trend.map((t) => monthLabel(t.month).split(' ')[0].slice(0, 3)),
@@ -76,8 +80,13 @@ const alertTone = { danger: 'bg-rose-50 text-rose-900 ring-rose-200 dark:bg-rose
                     <p class="text-sm text-indigo-100">Safe to spend until payday</p>
                     <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="{ good: 'bg-emerald-400/25 text-emerald-50', warning: 'bg-amber-400/30 text-amber-50', danger: 'bg-rose-500/40 text-rose-50' }[health.tone]">{{ health.label }}</span>
                 </div>
-                <p class="mt-1 text-4xl font-bold tracking-tight">{{ money(sts.safe_to_spend) }}</p>
-                <p class="mt-1 text-sm text-indigo-100">{{ health.text }}</p>
+                <div class="mt-1 flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-4xl font-bold tracking-tight">{{ money(sts.safe_to_spend) }}</p>
+                        <p class="mt-1 text-sm text-indigo-100">{{ health.text }}</p>
+                    </div>
+                    <Mascot :mood="mood" :size="76" bob class="-mb-2" />
+                </div>
 
                 <div class="mt-5 grid grid-cols-3 gap-2 text-center">
                     <div class="rounded-2xl bg-white/10 p-2.5">
@@ -104,6 +113,20 @@ const alertTone = { danger: 'bg-rose-50 text-rose-900 ring-rose-200 dark:bg-rose
                 <RouterLink to="/plan/payday" class="card flex flex-col items-center justify-center gap-1.5 !p-3 text-xs font-medium"><span class="rounded-xl bg-amber-50 p-2 text-amber-600 dark:bg-amber-950"><Icon name="calendar" /></span>Payday</RouterLink>
             </section>
         </div>
+
+        <div v-if="sync.pending.length" class="flex items-center gap-3 rounded-2xl bg-sky-50 p-3 text-sm text-sky-900 ring-1 ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900">
+            <span class="text-xl">☁️</span>
+            <p class="flex-1"><b>{{ sync.pending.length }} change{{ sync.pending.length === 1 ? '' : 's' }}</b> saved on this device. Totals update after they sync.</p>
+        </div>
+
+        <RouterLink to="/plan/domino" class="card flex items-center gap-3 transition hover:ring-indigo-300">
+            <Mascot mood="thinking" :size="48" />
+            <div class="min-w-0 flex-1">
+                <p class="font-semibold">Domino Check</p>
+                <p class="text-sm text-slate-500">What if payday is late? See which bill would tip over first, before it happens.</p>
+            </div>
+            <Icon name="chevronRight" size="18" class="text-slate-400" />
+        </RouterLink>
 
         <!-- Alerts -->
         <section v-if="d.alerts.length" class="space-y-2">

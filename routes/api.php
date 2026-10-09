@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ConnectionController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\PaydayController;
@@ -19,12 +20,19 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'idempotent'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::post('/onboard', [ProfileController::class, 'onboard']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
+    Route::post('/profile/share-code', [ProfileController::class, 'regenerateShareCode']);
+
+    // Personal QR codes and buddies.
+    Route::get('/connections', [ConnectionController::class, 'index']);
+    Route::delete('/connections/{userId}', [ConnectionController::class, 'destroy'])->whereNumber('userId');
+    Route::get('/connect/{code}', [ConnectionController::class, 'preview'])->middleware('throttle:30,1');
+    Route::post('/connect/{code}', [ConnectionController::class, 'connect'])->middleware('throttle:20,1');
 
     Route::get('/dashboard', DashboardController::class);
 
@@ -62,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/plans/{id}/invites', [SharedPlanController::class, 'invite']);
     Route::delete('/plans/{id}/invites/{inviteId}', [SharedPlanController::class, 'cancelInvite']);
     Route::post('/plans/{id}/code', [SharedPlanController::class, 'regenerateCode']);
+    Route::patch('/plans/{id}/me', [SharedPlanController::class, 'updateMe']);
     Route::post('/plans/{id}/leave', [SharedPlanController::class, 'leave']);
     Route::delete('/plans/{id}/members/{userId}', [SharedPlanController::class, 'removeMember']);
     Route::post('/plans/{id}/members/{userId}/owner', [SharedPlanController::class, 'transferOwnership']);

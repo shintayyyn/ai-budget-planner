@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import { Chart, BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart, BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, LineController, LineElement, PointElement, Filler, Tooltip, Legend } from 'chart.js';
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, Tooltip, Legend);
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, LineController, LineElement, PointElement, Filler, Tooltip, Legend);
 
 const props = defineProps({ type: String, data: Object, options: Object });
 const canvas = ref(null);

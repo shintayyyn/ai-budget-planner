@@ -1,7 +1,7 @@
 {
-    "name": "AI Budget Planner",
-    "short_name": "Budget AI",
-    "description": "Plan your paycheck, track spending and ask a private on-device AI about your money.",
+    "name": "Amotan",
+    "short_name": "Amotan",
+    "description": "Offline-first money buddy. Works with no signal and syncs to the cloud when you are online.",
     "id": "/",
     "start_url": "/?source=pwa",
     "scope": "/",
@@ -19,6 +19,7 @@
     "shortcuts": [
         { "name": "Add expense", "url": "/activity?add=1", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
         { "name": "Ask the assistant", "url": "/assistant", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-        { "name": "Payday planner", "url": "/plan/payday", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+        { "name": "Payday planner", "url": "/plan/payday", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "My QR", "url": "/me/qr", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
     ]
 }

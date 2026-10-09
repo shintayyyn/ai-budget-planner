@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SharedPlan;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 /** Totals, per-member shares and "who owes whom" for a shared plan. */
 class SharedPlanService
@@ -83,5 +84,101 @@ class SharedPlanService
         }
 
         return $out;
+    }
+
+    /**
+     * Fair-share contributions toward the remaining target. Members may set a
+     * private monthly comfort amount (capacity); suggestions are proportional to
+     * it and never exceed it. Paused members are skipped anonymously. When the
+     * group cannot cover the monthly need, the gap and a realistic new date are
+     * reported instead of pushing the shortfall onto everyone else.
+     */
+    public function fairPlan(SharedPlan $plan, User $viewer, ?Carbon $today = null): ?array
+    {
+        $today ??= Carbon::today();
+        $summary = $this->summary($plan);
+        $remaining = $summary['remaining'];
+        if (! $plan->target_amount || $remaining <= 0) {
+            return null;
+        }
+
+        $months = $plan->target_date && $plan->target_date->gt($today)
+            ? max(1, (int) ceil($today->diffInDays($plan->target_date) / 30.44))
+            : 1;
+        $need = round($remaining / $months, 2);
+
+        $members = $plan->members()->get();
+        $isPaused = fn (User $m) => $m->pivot->paused_until && Carbon::parse($m->pivot->paused_until)->gte($today);
+        $active = $members->reject($isPaused)->values();
+        $alloc = $this->distribute($need, $active->mapWithKeys(fn (User $m) => [$m->id => $m->pivot->capacity === null ? null : (float) $m->pivot->capacity])->all());
+
+        $covered = round(array_sum($alloc), 2);
+        $gap = round(max(0, $need - $covered), 2);
+        $suggestedDate = $gap > 0 && $covered > 0
+            ? $today->copy()->addMonthsNoOverflow((int) ceil($remaining / $covered))->toDateString()
+            : null;
+        $me = $members->firstWhere('id', $viewer->id);
+
+        return [
+            'months_left' => $months,
+            'monthly_need' => $need,
+            'covered' => $covered,
+            'gap' => $gap,
+            'paused_count' => $members->count() - $active->count(),
+            'members_with_capacity' => $active->filter(fn ($m) => $m->pivot->capacity !== null)->count(),
+            'suggested_date' => $suggestedDate,
+            'me' => [
+                'suggested' => round($alloc[$viewer->id] ?? 0, 2),
+                'capacity' => $me?->pivot->capacity === null ? null : (float) $me->pivot->capacity,
+                'paused' => $me ? $isPaused($me) : false,
+            ],
+        ];
+    }
+
+    /**
+     * Water-filling split of $need. A null capacity means "no limit set" and
+     * weighs like an equal share; set capacities act as both weight and cap.
+     *
+     * @param  array<int, float|null>  $capacities
+     * @return array<int, float>
+     */
+    public function distribute(float $need, array $capacities): array
+    {
+        $alloc = array_fill_keys(array_keys($capacities), 0.0);
+        if (! $capacities || $need <= 0) {
+            return $alloc;
+        }
+        $equal = $need / count($capacities);
+        $open = array_keys($capacities);
+        $left = $need;
+
+        for ($guard = 0; $left > 0.005 && $open && $guard < 50; $guard++) {
+            $weights = [];
+            foreach ($open as $id) {
+                $weights[$id] = $capacities[$id] === null ? $equal : max(0, $capacities[$id]);
+            }
+            $total = array_sum($weights);
+            if ($total <= 0) {
+                break;
+            }
+            $spent = 0;
+            foreach ($open as $k => $id) {
+                $give = $left * $weights[$id] / $total;
+                if ($capacities[$id] !== null) {
+                    $give = min($give, $capacities[$id] - $alloc[$id]);
+                }
+                $alloc[$id] += $give;
+                $spent += $give;
+                if ($capacities[$id] !== null && $alloc[$id] >= $capacities[$id] - 0.005) {
+                    unset($open[$k]);
+                }
+            }
+            $left -= $spent;
+            if ($spent < 0.005) {
+                break;
+            }
+        }
+
+        return array_map(fn ($v) => round($v, 2), $alloc);
     }
 }

@@ -9,6 +9,7 @@ import Sheet from '../components/Sheet.vue';
 import Progress from '../components/Progress.vue';
 import GoalTabs from '../components/GoalTabs.vue';
 import QrScanSheet from '../components/QrScanSheet.vue';
+import { parseBuddyCode } from '../qr';
 
 const ui = useUi();
 const router = useRouter();
@@ -61,6 +62,7 @@ async function create() {
 }
 
 function joinCode(c = code.value) {
+    if (parseBuddyCode(c)) return router.push(`/u/${parseBuddyCode(c)}`);
     const clean = c.trim().replace(/.*\/join\//i, '').toUpperCase();
     if (clean.length < 6) return ui.toast('Enter the 8-character invite code', 'error');
     scanOpen.value = false;
@@ -90,6 +92,7 @@ const plans = computed(() => data.value?.plans || []);
         <div class="grid grid-cols-2 gap-2">
             <button class="btn-primary" @click="createOpen = true"><Icon name="plus" size="18" />New plan</button>
             <button v-if="canScan" class="btn-ghost" @click="scanOpen = true"><Icon name="camera" size="18" />Scan QR</button>
+            <RouterLink to="/me/qr" class="btn-ghost" :class="canScan ? 'col-span-2' : ''">🪪 My QR &amp; buddies</RouterLink>
             <form class="flex gap-2" :class="canScan ? 'col-span-2' : ''" @submit.prevent="joinCode()">
                 <input v-model="code" class="input uppercase" placeholder="Invite code" maxlength="60" aria-label="Invite code" />
                 <button class="btn-ghost shrink-0">Join</button>
@@ -179,6 +182,6 @@ const plans = computed(() => data.value?.plans || []);
             </form>
         </Sheet>
 
-        <QrScanSheet :open="scanOpen" @close="scanOpen = false" @code="joinCode" />
+        <QrScanSheet :open="scanOpen" @close="scanOpen = false" @code="joinCode" @buddy="(c) => router.push(`/u/${c}`)" />
     </div>
 </template>

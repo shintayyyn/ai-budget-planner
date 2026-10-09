@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '../stores/auth';
 import { setPref } from '../format';
 import Icon from '../components/Icon.vue';
+import Mascot from '../components/Mascot.vue';
 
 const props = defineProps({ mode: { type: String, default: 'login' } });
 const auth = useAuth();
@@ -32,9 +33,12 @@ async function submit() {
 <template>
     <div class="safe-top flex min-h-dvh flex-col bg-gradient-to-b from-indigo-600 to-violet-700 md:items-center md:justify-center md:p-6">
         <div class="px-6 pt-14 pb-10 text-white md:pt-0 md:text-center">
-            <img src="/icons/icon-192.png" class="mb-5 h-14 w-14 rounded-2xl ring-4 ring-white/20 md:mx-auto" alt="" />
+            <div class="mb-4 flex items-end gap-3 md:justify-center">
+                <Mascot :mood="isRegister ? 'celebrate' : 'happy'" :size="84" bob />
+                <p class="pb-2 text-2xl font-extrabold tracking-tight">Amotan</p>
+            </div>
             <h1 class="text-3xl font-bold tracking-tight">Make it to payday,<br />every time.</h1>
-            <p class="mt-2 text-indigo-100">Budgeting with a private AI that runs on your own device.</p>
+            <p class="mt-2 text-indigo-100">Your offline-first money buddy. Works with no signal, syncs when you're online.</p>
         </div>
         <div class="safe-bottom flex-1 rounded-t-3xl bg-white px-6 pt-8 pb-8 md:w-full md:max-w-md md:flex-none md:rounded-3xl dark:bg-slate-900">
             <h2 class="mb-5 text-xl font-semibold">{{ isRegister ? 'Create your account' : 'Welcome back' }}</h2>

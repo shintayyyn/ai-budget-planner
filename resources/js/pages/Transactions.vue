@@ -7,6 +7,7 @@ import { invalidateContext } from '../ai/assistant';
 import Icon from '../components/Icon.vue';
 import Sheet from '../components/Sheet.vue';
 import AddTransactionSheet from '../components/AddTransactionSheet.vue';
+import { sync } from '../sync';
 
 const ui = useUi();
 const month = ref(thisMonth());
@@ -70,6 +71,12 @@ const sourceLabel = { manual: 'Added manually', chat: 'Logged via assistant', re
 
 <template>
     <div class="space-y-4">
+        <section v-if="sync.pending.length" class="card !p-3">
+            <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300">☁️ Saved on this device · waiting to sync</p>
+            <ul class="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+                <li v-for="p in sync.pending" :key="p.id" class="py-1.5">{{ p.label }}</li>
+            </ul>
+        </section>
         <div class="flex items-center justify-between">
             <button class="rounded-full p-2 hover:bg-slate-200 dark:hover:bg-slate-800" aria-label="Previous month" @click="month = shiftMonth(month, -1)"><Icon name="chevronLeft" /></button>
             <h2 class="font-semibold">{{ monthLabel(month) }}</h2>

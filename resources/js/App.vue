@@ -3,6 +3,10 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Icon from './components/Icon.vue';
 import AddTransactionSheet from './components/AddTransactionSheet.vue';
+import Mascot from './components/Mascot.vue';
+import SyncChip from './components/SyncChip.vue';
+import { sync, startSync, onSync } from './sync';
+import { invalidateContext } from './ai/assistant';
 import { useAuth } from './stores/auth';
 import { useUi } from './stores/ui';
 import { api } from './api';
@@ -26,8 +30,7 @@ const chrome = computed(() => auth.loggedIn && !route.meta.guest && !route.meta.
 const showFab = computed(() => chrome.value && !route.meta.full);
 
 // Offline + install prompt (Android/desktop) and iOS "Add to Home Screen" hint.
-const online = ref(navigator.onLine);
-const setOnline = () => (online.value = navigator.onLine);
+const online = computed(() => sync.online);
 const installEvent = ref(null);
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -54,15 +57,20 @@ async function refreshUnread() {
     try { ui.unreadAlerts = (await api.get('/alerts')).filter((a) => !a.read_at).length; } catch {}
 }
 
+// Offline-first: changes are saved on the device first, then synced to the cloud.
+onSync('queued', () => setTimeout(() => ui.toast("Saved on this device. Amo will sync it when you're online."), 60));
+onSync('synced', (n) => {
+    invalidateContext();
+    ui.changed();
+    ui.toast(`Synced ${n} change${n === 1 ? '' : 's'} to the cloud ☁️`);
+});
+
 onMounted(() => {
-    addEventListener('online', setOnline);
-    addEventListener('offline', setOnline);
     addEventListener('beforeinstallprompt', onBeforeInstall);
+    startSync();
     if (auth.loggedIn) autoStart();
 });
 onBeforeUnmount(() => {
-    removeEventListener('online', setOnline);
-    removeEventListener('offline', setOnline);
     removeEventListener('beforeinstallprompt', onBeforeInstall);
 });
 watch(() => auth.loggedIn, (v) => v && autoStart());
@@ -87,10 +95,10 @@ watch(() => route.query.add, (v) => {
         <!-- Desktop sidebar -->
         <aside class="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-slate-200 bg-white px-4 py-6 md:flex dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-8 flex items-center gap-2 px-2">
-                <img src="/icons/icon-192.png" class="h-9 w-9 rounded-xl" alt="" />
+                <Mascot :mood="online ? 'happy' : 'sleepy'" :size="44" />
                 <div>
-                    <p class="font-bold leading-tight">Budget AI</p>
-                    <p class="text-xs text-slate-500">Private · on-device</p>
+                    <p class="text-lg font-extrabold leading-tight tracking-tight">Amotan</p>
+                    <p class="text-xs text-slate-500">Offline-first · syncs online</p>
                 </div>
             </div>
             <nav class="space-y-1">
@@ -107,7 +115,8 @@ watch(() => route.query.add, (v) => {
                 </RouterLink>
             </nav>
             <button class="btn-primary mt-6" @click="ui.openAdd()"><Icon name="plus" size="18" />Add transaction</button>
-            <div class="mt-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800/60">
+            <div class="mt-auto mb-3"><SyncChip /></div>
+            <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800/60">
                 <p class="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300"><Icon name="shield" size="14" />AI runs on this device</p>
                 <p class="mt-0.5">{{ ai.status === 'ready' ? 'Model loaded' : ai.backend === 'off' ? 'Instant mode' : 'Model not loaded' }}</p>
             </div>
@@ -117,8 +126,9 @@ watch(() => route.query.add, (v) => {
             <!-- Mobile header -->
             <header class="safe-top sticky top-0 z-30 border-b border-slate-200/60 bg-slate-50/85 backdrop-blur-lg md:hidden dark:border-slate-800/60 dark:bg-slate-950/85">
                 <div class="flex h-14 items-center justify-between px-4">
-                    <h1 class="text-lg font-bold">{{ route.meta.title }}</h1>
+                    <h1 class="flex min-w-0 items-center gap-2 text-lg font-bold"><Mascot v-if="route.meta.tab === 'home'" :mood="online ? 'happy' : 'sleepy'" :size="30" /><span class="truncate">{{ route.meta.title }}</span></h1>
                     <div class="flex items-center gap-1">
+                        <SyncChip />
                         <RouterLink to="/alerts" class="relative rounded-full p-2 text-slate-600 dark:text-slate-300" aria-label="Alerts">
                             <Icon name="bell" />
                             <span v-if="ui.unreadAlerts" class="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">{{ ui.unreadAlerts }}</span>
@@ -129,14 +139,14 @@ watch(() => route.query.add, (v) => {
             </header>
 
             <div v-if="!online" class="flex items-center justify-center gap-2 bg-amber-100 px-4 py-1.5 text-xs font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
-                <Icon name="wifiOff" size="14" />Offline. Showing your last synced data, and the on-device AI still works.
+                <Icon name="wifiOff" size="14" />Offline. Amotan keeps working: changes are saved on this device and sync when you're back online.
             </div>
 
             <div v-if="showInstall" class="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-indigo-600 p-3 text-white md:mx-8 md:mt-6">
-                <img src="/icons/icon-192.png" class="h-10 w-10 rounded-xl ring-2 ring-white/30" alt="" />
+                <Mascot :size="44" />
                 <p class="flex-1 text-sm">
-                    <b>Install Budget AI</b><br />
-                    <span v-if="installEvent" class="opacity-90">Add it to your home screen for quick, offline access.</span>
+                    <b>Install Amotan</b><br />
+                    <span v-if="installEvent" class="opacity-90">Add it to your home screen so it opens with no internet.</span>
                     <span v-else class="opacity-90">Tap Share, then “Add to Home Screen”.</span>
                 </p>
                 <button v-if="installEvent" class="rounded-xl bg-white px-3 py-1.5 text-sm font-semibold text-indigo-700" @click="install">Install</button>

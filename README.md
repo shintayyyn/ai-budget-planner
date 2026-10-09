@@ -1,6 +1,10 @@
-# AI Budget Planner
+# Amotan
 
-A mobile-first, installable PWA that helps people make it to payday. It plans each paycheck, tracks spending, warns before overspending and answers money questions with an AI that runs **on the user's own device**.
+<img src="public/icons/icon-192.png" width="72" alt="Amo, the Amotan mascot" align="right" />
+
+An **offline-first**, installable money buddy that helps people make it to payday. It plans each paycheck, tracks spending, warns before overspending, stress-tests the next pay cycles and answers money questions with an AI that runs **on the user's own device**. It works with no internet and syncs to the cloud when online.
+
+Meet **Amo**, the mascot: a little coin pouch with a sprout (savings that grow). Amo's mood follows your money (happy, thinking, worried, celebrating) and falls asleep when you're offline.
 
 **Stack:** Laravel 13 (PHP 8.5) · MySQL/MariaDB · Vue 3 + Vite + Tailwind 4 · WebLLM (on-device LLM) · Tesseract.js (on-device OCR)
 
@@ -10,13 +14,17 @@ A mobile-first, installable PWA that helps people make it to payday. It plans ea
 |---|---|
 | **Smart budgeting** | Builds a monthly budget from income, fixed bills, savings goals and the last 3 months of spending (an adaptive 50/30/20). Editable per category. |
 | **Expense tracking** | Manual entry, quick-add text ("coffee 4.50 at Starbucks"), chat ("spent 18 on pizza yesterday"), or receipt scanning. Auto-categorised by keywords. |
-| **AI assistant ("Penny")** | Answers "Can I afford…?", "How much can I spend today?", "Where did my money go?", goals, debt and payday questions, and logs expenses from chat. |
+| **AI assistant ("Amo")** | Answers "Can I afford…?", "How much can I spend today?", "Where did my money go?", goals, debt and payday questions, and logs expenses from chat. |
 | **Savings goals** | Progress, required monthly amount, estimated finish date, and a "what if I saved X/month?" calculator. |
 | **Spending alerts** | Over budget, near the limit, month pace too high, *money will run out before payday*, bills due soon, and shared-plan invitations. |
 | **Payday planner** | Splits each paycheck into bills → debts → essentials → savings → buffer, then a daily allowance. Surplus goes to the highest-interest debt. |
 | **Bills & debts** | Due dates, "mark paid" (logs the expense, reduces the debt), avalanche ordering, payoff estimates. |
 | **Plan together** | Shared plans (outings, trips, household pots, group goals) that can be **🔒 Private** or **👥 Group**. Invite people by **QR code**, link, 8-character code or email. Members add contributions and shared expenses, follow a checklist, then **settle up** with the fewest payments. Each member's GCash/Maya handle is shown, and either side can record a payment. |
-| **PWA** | Installable on Android, iOS and desktop. Offline app shell, offline last-known data, and home-screen shortcuts. |
+| **Offline-first + cloud sync** | Every screen you've opened is saved on the device (IndexedDB), so the app opens and works with no signal. Changes made offline (expenses, bills, goals, plan entries, buddies) go into an on-device outbox and sync automatically when the device is back online. Each change carries an `Idempotency-Key`, so a retry is never applied twice (`app/Http/Middleware/IdempotentRequest.php`). A sync chip shows the status, and **Settings → Offline & sync** lists pending and rejected changes. Logging out wipes the device. |
+| **Personal QR** | Every user gets an auto-generated code (e.g. `AMO-7KX3PQ`). The QR is drawn on the device with Amo in the middle, and can be shared as an image card via the phone's share sheet, saved, or copied as a link. Scanning a friend's QR makes you **buddies** (queued if offline), so you can invite each other to group plans in one tap without sharing emails. The code can be reset. |
+| **Domino Check** | A day-by-day stress test of the next two pay cycles: salary late, a surprise expense, bills going up, or an income cut. It shows the first day you'd go short, the chain of bills that tips you over, bills that collide, the buffer you'd need and what to postpone. Runs entirely on the device (`resources/js/sim/domino.js`). |
+| **Fair-share group goals** | In group plans with a target, each member can set a private monthly amount they can comfortably give. Suggested shares are proportional to it and never exceed it. Members can pause for a month anonymously. If the group can't cover the monthly need, the plan shows the gap and a realistic new date, rather than asking everyone else to pay more. Nobody sees anyone else's amount. |
+| **PWA** | Installable on Android, iOS and desktop. Offline app shell, offline data, and home-screen shortcuts. |
 
 ## The AI runs on the device
 

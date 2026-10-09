@@ -9,6 +9,8 @@ import { ai, MODELS, setBackend, loadModel, unloadModel, deleteModel, refreshCac
 import { invalidateContext } from '../ai/assistant';
 import Icon from '../components/Icon.vue';
 import Sheet from '../components/Sheet.vue';
+import Mascot from '../components/Mascot.vue';
+import { sync, flush, dismissFailed } from '../sync';
 
 const auth = useAuth();
 const ui = useUi();
@@ -106,7 +108,16 @@ async function exportCsv() {
     a.click();
 }
 
+const syncing = ref(false);
+async function syncNow() {
+    syncing.value = true;
+    try { await flush(); } finally { syncing.value = false; }
+    if (!sync.pending.length) ui.toast('Everything is synced');
+}
+const ago = (t) => (t ? new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'not yet');
+
 async function logout() {
+    if (sync.pending.length && !confirm(`${sync.pending.length} change(s) haven't synced yet and will be lost if you log out. Log out anyway?`)) return;
     await unloadModel();
     await auth.logout();
     router.replace('/login');
@@ -125,6 +136,40 @@ const gb = (b) => (b / 1024 ** 3).toFixed(2);
 
 <template>
     <div class="space-y-5">
+        <!-- Offline & sync -->
+        <section id="sync" class="card">
+            <div class="flex items-center gap-3">
+                <Mascot :mood="!sync.online ? 'sleepy' : sync.failed.length ? 'worried' : 'happy'" :size="52" />
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-semibold">Offline & sync</h2>
+                    <p class="text-sm text-slate-500">{{ sync.online ? 'Online' : 'Offline' }} · last synced {{ ago(sync.lastSync) }}</p>
+                </div>
+                <button class="btn-ghost !px-3 !py-2 text-sm" :disabled="!sync.online || syncing" @click="syncNow">{{ syncing ? 'Syncing…' : 'Sync now' }}</button>
+            </div>
+            <p class="mt-3 text-xs text-slate-500">Amotan works without internet. Everything you open is saved on this device, and changes you make offline wait here and sync to the cloud automatically when you're back online. Logging out wipes this device.</p>
+            <div v-if="sync.pending.length" class="mt-3">
+                <p class="label">Waiting to sync ({{ sync.pending.length }})</p>
+                <ul class="divide-y divide-slate-100 rounded-xl bg-slate-50 px-3 text-sm dark:divide-slate-800 dark:bg-slate-800/60">
+                    <li v-for="p in sync.pending" :key="p.id" class="flex justify-between gap-2 py-2"><span class="truncate">{{ p.label }}</span><span class="shrink-0 text-xs text-slate-500">{{ ago(p.at) }}</span></li>
+                </ul>
+            </div>
+            <div v-if="sync.failed.length" class="mt-3">
+                <div class="flex items-center justify-between"><p class="label">Couldn't sync</p><button class="text-xs font-medium text-slate-500" @click="dismissFailed()">Clear</button></div>
+                <ul class="space-y-1 text-sm">
+                    <li v-for="f in sync.failed" :key="f.id" class="flex items-start gap-2 rounded-xl bg-rose-50 p-2 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+                        <span class="flex-1"><b>{{ f.label }}</b><br /><span class="text-xs">{{ f.error }}</span></span>
+                        <button class="text-xs" aria-label="Dismiss" @click="dismissFailed(f.id)">✕</button>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <RouterLink to="/me/qr" class="card flex items-center gap-3 transition hover:ring-indigo-300">
+            <span class="text-2xl">🪪</span>
+            <div class="min-w-0 flex-1"><p class="font-semibold">My QR &amp; buddies</p><p class="text-sm text-slate-500">Your auto-generated code {{ auth.user.share_code }}</p></div>
+            <Icon name="chevronRight" size="18" class="text-slate-400" />
+        </RouterLink>
+
         <!-- Profile -->
         <section class="card">
             <h2 class="mb-3 font-semibold">Money settings</h2>
@@ -224,7 +269,7 @@ const gb = (b) => (b / 1024 ** 3).toFixed(2);
             <button class="btn-ghost w-full justify-start" @click="exportCsv"><Icon name="download" size="18" />Export transactions (CSV)</button>
             <button class="btn-ghost w-full justify-start" @click="logout"><Icon name="logout" size="18" />Log out</button>
             <button class="btn-danger w-full justify-start" @click="deleteOpen = true"><Icon name="trash" size="18" />Delete account</button>
-            <p class="pt-2 text-center text-xs text-slate-400">AI Budget Planner · signed in as {{ auth.user.email }}<br />Not financial advice. For investment or tax decisions, talk to a licensed professional.</p>
+            <p class="pt-2 text-center text-xs text-slate-400">Amotan · signed in as {{ auth.user.email }}<br />Not financial advice. For investment or tax decisions, talk to a licensed professional.</p>
         </section>
 
         <Sheet :open="catOpen" :title="catForm.id ? 'Edit category' : 'New category'" @close="catOpen = false">

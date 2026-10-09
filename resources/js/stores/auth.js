@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { api, token } from '../api';
+import { cache } from '../offline';
+import { wipeDevice, flush } from '../sync';
 
 export const useAuth = defineStore('auth', {
     state: () => ({ user: null, loaded: false }),
@@ -10,19 +12,28 @@ export const useAuth = defineStore('auth', {
         async load() {
             if (this.loaded) return;
             if (token.get()) {
-                try { this.user = await api.get('/me'); } catch { this.user = null; }
+                try {
+                    this.user = await api.get('/me');
+                } catch (e) {
+                    // Offline with no saved copy yet: stay signed in rather than locking the user out.
+                    this.user = e?.offline ? { name: '', onboarded: true, currency: 'USD' } : null;
+                }
             }
             this.loaded = true;
         },
         async login(email, password) {
             const res = await api.post('/login', { email, password, device: deviceName() });
-            token.set(res.token);
-            this.user = res.user;
+            await this.signedIn(res);
         },
         async register(form) {
             const res = await api.post('/register', { ...form, device: deviceName() });
+            await this.signedIn(res);
+        },
+        async signedIn(res) {
+            await wipeDevice();
             token.set(res.token);
             this.user = res.user;
+            cache.set('/api/me', res.user);
         },
         async logout() {
             try { await api.post('/logout'); } catch {}
@@ -32,9 +43,15 @@ export const useAuth = defineStore('auth', {
             token.set(null);
             this.user = null;
             navigator.serviceWorker?.controller?.postMessage('clear-data');
+            wipeDevice();
         },
         async update(patch) {
-            this.user = await api.patch('/profile', patch);
+            const res = await api.patch('/profile', patch);
+            this.user = res?.queued ? { ...this.user, ...patch } : res;
+            cache.set('/api/me', this.user);
+        },
+        async syncNow() {
+            return flush();
         },
     },
 });

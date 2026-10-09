@@ -26,3 +26,7 @@
 @utility chip { @apply rounded-full px-3 py-1.5 text-sm font-medium transition; }
 @utility safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 @utility safe-top { padding-top: env(safe-area-inset-top); }
+
+@keyframes amo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.amo-bob { animation: amo-bob 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .amo-bob { animation: none; } }

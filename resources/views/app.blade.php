@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ config('app.name') }}</title>
-    <meta name="description" content="Plan your paycheck, track spending and ask a private on-device AI about your money.">
+    <meta name="description" content="Amotan: an offline-first money buddy. Plan your paycheck, track spending and stress-test your budget, even with no signal. Syncs to the cloud when you are online.">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Budget AI">
+    <meta name="apple-mobile-web-app-title" content="Amotan">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">

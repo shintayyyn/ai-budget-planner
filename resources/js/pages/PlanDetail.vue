@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api';
 import { useUi } from '../stores/ui';
@@ -11,6 +11,7 @@ import Sheet from '../components/Sheet.vue';
 import Progress from '../components/Progress.vue';
 import QrCode from '../components/QrCode.vue';
 import GoalTabs from '../components/GoalTabs.vue';
+import Mascot from '../components/Mascot.vue';
 
 const props = defineProps({ id: String });
 const route = useRoute();
@@ -90,11 +91,32 @@ async function addTask() {
 const toggleTask = (t) => run(() => api.patch(`/plans/${props.id}/tasks/${t.id}`, { done: !t.done }));
 const removeTask = (t) => run(() => api.del(`/plans/${props.id}/tasks/${t.id}`));
 
+// Fair share: a private monthly comfort amount and an anonymous one-month pause.
+const capacity = ref('');
+watch(() => plan.value?.fair?.me.capacity, (v) => (capacity.value = v ?? ''), { immediate: true });
+const saveCapacity = () => run(() => api.patch(`/plans/${props.id}/me`, { capacity: capacity.value === '' ? null : Number(capacity.value) }), 'Saved privately 🔒');
+const togglePause = () => run(() => api.patch(`/plans/${props.id}/me`, { paused: !plan.value.fair.me.paused }), plan.value.fair.me.paused ? 'Welcome back!' : 'Paused for this month. Nobody sees it was you.');
+
+// Buddies (connected by personal QR) can be invited without typing an email.
+const buddies = ref([]);
+const picked = ref([]);
+watch(inviteOpen, async (open) => { if (open) { picked.value = []; try { buddies.value = await api.get('/connections'); } catch {} } }, { immediate: true });
+const buddyChoices = computed(() => buddies.value.filter((b) => !s.value?.members.some((m) => m.id === b.id)));
+const togglePick = (id) => (picked.value = picked.value.includes(id) ? picked.value.filter((x) => x !== id) : [...picked.value, id]);
+async function inviteBuddies() {
+    const res = await run(() => api.post(`/plans/${props.id}/invites`, { user_ids: picked.value }));
+    if (res && !res.queued) {
+        plan.value = res.plan;
+        picked.value = [];
+        ui.toast(`${res.invited} invite${res.invited === 1 ? '' : 's'} sent`);
+    }
+}
+
 async function sendInvites() {
     const list = emails.value.split(/[\s,;]+/).map((e) => e.trim()).filter(Boolean);
     if (!list.length) return;
     const res = await run(() => api.post(`/plans/${props.id}/invites`, { emails: list }));
-    if (res) {
+    if (res && !res.queued) {
         plan.value = res.plan;
         emails.value = '';
         ui.toast(`${res.invited} invite${res.invited === 1 ? '' : 's'} sent. They'll see it when they open the app.`);
@@ -107,7 +129,7 @@ async function copyLink() {
     try { await navigator.clipboard.writeText(plan.value.join_url); ui.toast('Link copied'); } catch { ui.toast(plan.value.join_url); }
 }
 async function share() {
-    try { await navigator.share({ title: plan.value.name, text: `Join "${plan.value.name}" on Budget AI. Code: ${plan.value.invite_code}`, url: plan.value.join_url }); } catch {}
+    try { await navigator.share({ title: plan.value.name, text: `Join "${plan.value.name}" on Amotan. Code: ${plan.value.invite_code}`, url: plan.value.join_url }); } catch {}
 }
 const canShare = !!navigator.share;
 
@@ -198,6 +220,33 @@ const color = (id) => COLORS[id % COLORS.length];
                     <div class="rounded-xl bg-white/15 p-2"><p class="font-bold">{{ money(s.spent) }}</p><p class="text-[11px] text-emerald-50">spent</p></div>
                     <div class="rounded-xl bg-white/15 p-2"><p class="font-bold">{{ money(s.share_per_person) }}</p><p class="text-[11px] text-emerald-50">{{ isGroup ? 'per person' : 'spent so far' }}</p></div>
                 </div>
+            </section>
+
+            <!-- Fair share -->
+            <section v-if="plan.fair" class="card">
+                <div class="flex items-start gap-3">
+                    <Mascot :mood="plan.fair.gap > 0 ? 'thinking' : 'happy'" :size="52" />
+                    <div class="min-w-0 flex-1">
+                        <h2 class="font-semibold">Fair share</h2>
+                        <p class="text-sm text-slate-500">Split by what each person can comfortably give. Everyone's amount stays private.</p>
+                    </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-center">
+                    <div class="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/40"><p class="text-xl font-bold">{{ plan.fair.me.paused ? 'Paused' : money(plan.fair.me.suggested) }}</p><p class="text-xs text-slate-500">your share / month</p></div>
+                    <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60"><p class="text-xl font-bold">{{ money(plan.fair.monthly_need) }}</p><p class="text-xs text-slate-500">group needs / month · {{ plan.fair.months_left }} mo left</p></div>
+                </div>
+                <p v-if="plan.fair.paused_count" class="mt-2 text-xs text-slate-500">🌙 {{ plan.fair.paused_count }} member{{ plan.fair.paused_count === 1 ? ' is' : 's are' }} taking a breather this month. Who it is stays private.</p>
+                <p v-if="plan.fair.gap > 0" class="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                    Together you can comfortably cover {{ money(plan.fair.covered) }} of {{ money(plan.fair.monthly_need) }} a month. Instead of asking anyone for more, a realistic date is <b>{{ plan.fair.suggested_date ? niceDate(plan.fair.suggested_date, { month: 'short', year: 'numeric' }) : 'later' }}</b>.
+                </p>
+                <form class="mt-3 flex items-end gap-2" @submit.prevent="saveCapacity">
+                    <div class="flex-1">
+                        <label class="label" for="cap">I can comfortably give per month (only you see this)</label>
+                        <input id="cap" v-model="capacity" type="number" min="0" inputmode="decimal" class="input" placeholder="No limit" />
+                    </div>
+                    <button class="btn-ghost shrink-0" :disabled="busy">Save</button>
+                </form>
+                <button class="mt-2 w-full text-center text-xs font-medium text-indigo-600" :disabled="busy" @click="togglePause">{{ plan.fair.me.paused ? 'Resume my share' : 'Pause me this month (anonymous)' }}</button>
             </section>
 
             <!-- Members -->
@@ -335,6 +384,14 @@ const color = (id) => COLORS[id % COLORS.length];
                     <button class="btn-ghost" @click="copyLink">🔗 Copy link</button>
                     <button v-if="canShare" class="btn-ghost" @click="share">📤 Share</button>
                 </div>
+                <div v-if="buddyChoices.length" class="mt-5">
+                    <p class="label">Your Amotan buddies</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button v-for="b in buddyChoices" :key="b.id" type="button" class="chip ring-1" :class="picked.includes(b.id) ? 'bg-indigo-600 text-white ring-indigo-600' : 'ring-slate-200 dark:ring-slate-700'" @click="togglePick(b.id)">{{ b.name }}</button>
+                    </div>
+                    <button class="btn-primary mt-2 w-full" :disabled="!picked.length || busy" @click="inviteBuddies">Invite {{ picked.length || '' }} {{ picked.length === 1 ? 'buddy' : 'buddies' }}</button>
+                </div>
+                <p v-else class="mt-5 text-xs text-slate-500">Tip: scan a friend's <RouterLink to="/me/qr" class="font-medium text-indigo-600">Amotan QR</RouterLink> to make them a buddy, then invite them here in one tap.</p>
                 <form class="mt-5" @submit.prevent="sendInvites">
                     <label class="label" for="ie">Or invite by email</label>
                     <div class="flex gap-2">
