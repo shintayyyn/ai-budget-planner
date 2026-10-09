@@ -50,7 +50,7 @@ async function submit() {
                 </div>
                 <div>
                     <label class="label" for="email">Email</label>
-                    <input id="email" v-model="form.email" type="email" class="input" autocomplete="email" required />
+                    <input id="email" autocapitalize="none" autocorrect="off" spellcheck="false" v-model="form.email" type="email" class="input" autocomplete="email" required />
                     <p v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email[0] }}</p>
                 </div>
                 <div>
