@@ -62,6 +62,21 @@ class SharedPlan extends Model
         return $this->hasMany(SharedPlanTask::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(PlanMessage::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(PlanNote::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(PlanEvent::class);
+    }
+
     public function isMember(User $user): bool
     {
         return $this->members()->whereKey($user->id)->exists();

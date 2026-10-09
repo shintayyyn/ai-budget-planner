@@ -54,6 +54,10 @@ const LABELS = [
     [/^POST \/connect\//, () => 'Add buddy'],
     [/^POST \/plans\/\d+\/items$/, (b) => `Plan entry: ${b?.description || b?.kind || ''} ${b?.amount ?? ''}`.trim()],
     [/^PATCH \/plans\/\d+\/me$/, () => 'Fair-share settings'],
+    [/^POST \/plans\/\d+\/messages$/, (b) => `Chat: ${(b?.body || '').slice(0, 40)}`],
+    [/^POST \/plans\/\d+\/notes$/, (b) => `Note: ${b?.title || ''}`],
+    [/^PATCH \/plans\/\d+\/notes\//, () => 'Edit note'],
+    [/^POST \/plans\/\d+\/events$/, (b) => `Calendar: ${b?.title || ''} ${b?.date || ''}`.trim()],
     [/^POST \/join\//, () => 'Join plan'],
     [/^PATCH \/profile$/, () => 'Profile settings'],
 ];

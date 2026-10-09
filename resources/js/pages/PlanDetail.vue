@@ -12,6 +12,9 @@ import Progress from '../components/Progress.vue';
 import QrCode from '../components/QrCode.vue';
 import GoalTabs from '../components/GoalTabs.vue';
 import Mascot from '../components/Mascot.vue';
+import PlanChat from '../components/PlanChat.vue';
+import PlanNotes from '../components/PlanNotes.vue';
+import PlanCalendar from '../components/PlanCalendar.vue';
 
 const props = defineProps({ id: String });
 const route = useRoute();
@@ -262,8 +265,8 @@ const color = (id) => COLORS[id % COLORS.length];
             </section>
 
             <!-- Tabs -->
-            <nav class="grid gap-1 rounded-2xl bg-slate-100 p-1 text-sm font-medium dark:bg-slate-900" :class="isGroup ? 'grid-cols-4' : 'grid-cols-3'">
-                <button v-for="t in [['money', 'Money'], ...(isGroup ? [['split', 'Split']] : []), ['tasks', 'Checklist'], ['people', isGroup ? 'People' : 'Settings']]" :key="t[0]" class="rounded-xl py-2 transition" :class="tab === t[0] ? 'bg-white shadow-sm dark:bg-slate-800' : 'text-slate-500'" @click="tab = t[0]">{{ t[1] }}</button>
+            <nav class="no-scrollbar flex gap-1 overflow-x-auto rounded-2xl bg-slate-100 p-1 text-sm font-medium dark:bg-slate-900">
+                <button v-for="t in [['money', 'Money'], ...(isGroup ? [['chat', 'Chat'], ['split', 'Split']] : []), ['tasks', 'To-do'], ['notes', 'Notes'], ['calendar', 'Dates'], ['people', isGroup ? 'People' : 'Settings']]" :key="t[0]" class="shrink-0 grow rounded-xl px-3 py-2 transition" :class="tab === t[0] ? 'bg-white shadow-sm dark:bg-slate-800' : 'text-slate-500'" @click="tab = t[0]">{{ t[1] }}</button>
             </nav>
 
             <!-- Money -->
@@ -289,6 +292,10 @@ const color = (id) => COLORS[id % COLORS.length];
             </section>
 
             <!-- Split -->
+            <PlanChat v-if="tab === 'chat'" :plan-id="props.id" />
+            <PlanNotes v-if="tab === 'notes'" :plan-id="props.id" :owner-id="plan.owner_id" />
+            <PlanCalendar v-if="tab === 'calendar'" :plan-id="props.id" :owner-id="plan.owner_id" :target-date="plan.target_date" :plan-name="plan.name" />
+
             <section v-if="tab === 'split'" class="space-y-3">
                 <div class="card">
                     <h3 class="font-semibold">Settle up</h3>

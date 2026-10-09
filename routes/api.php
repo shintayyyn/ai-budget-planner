@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ConnectionController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\PaydayController;
+use App\Http\Controllers\Api\PlanSpaceController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SharedPlanController;
 use App\Http\Controllers\Api\TransactionController;
@@ -79,6 +80,16 @@ Route::middleware(['auth:sanctum', 'idempotent'])->group(function () {
     Route::post('/plans/{id}/tasks', [SharedPlanController::class, 'addTask']);
     Route::patch('/plans/{id}/tasks/{taskId}', [SharedPlanController::class, 'updateTask']);
     Route::delete('/plans/{id}/tasks/{taskId}', [SharedPlanController::class, 'deleteTask']);
+
+    Route::get('/plans/{id}/messages', [PlanSpaceController::class, 'messages']);
+    Route::post('/plans/{id}/messages', [PlanSpaceController::class, 'sendMessage']);
+    Route::get('/plans/{id}/notes', [PlanSpaceController::class, 'notes']);
+    Route::post('/plans/{id}/notes', [PlanSpaceController::class, 'addNote']);
+    Route::patch('/plans/{id}/notes/{noteId}', [PlanSpaceController::class, 'updateNote']);
+    Route::delete('/plans/{id}/notes/{noteId}', [PlanSpaceController::class, 'deleteNote']);
+    Route::get('/plans/{id}/events', [PlanSpaceController::class, 'events']);
+    Route::post('/plans/{id}/events', [PlanSpaceController::class, 'addEvent']);
+    Route::delete('/plans/{id}/events/{eventId}', [PlanSpaceController::class, 'deleteEvent']);
     Route::post('/invites/{inviteId}', [SharedPlanController::class, 'respondInvite']);
     Route::get('/join/{code}', [SharedPlanController::class, 'preview'])->middleware('throttle:30,1');
     Route::post('/join/{code}', [SharedPlanController::class, 'join'])->middleware('throttle:10,1');

@@ -30,3 +30,6 @@
 @keyframes amo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 .amo-bob { animation: amo-bob 3s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .amo-bob { animation: none; } }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
