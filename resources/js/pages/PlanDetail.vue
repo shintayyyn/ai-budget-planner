@@ -82,18 +82,18 @@ async function saveItem() {
 
 async function removeItem(i) {
     if (!confirm('Remove this entry? Any matching personal transaction is removed too.')) return;
-    await run(() => api.del(`/plans/${props.id}/items/${i.id}`), 'Removed');
+    await run(() => api.del(`/plans/${props.id}/items/${i.id}`), 'Entry removed');
     invalidateContext();
     ui.changed();
 }
 
 async function addTask() {
     if (!task.title.trim()) return;
-    await run(() => api.post(`/plans/${props.id}/tasks`, { ...task, estimated_cost: task.estimated_cost === '' ? null : Number(task.estimated_cost) }));
+    await run(() => api.post(`/plans/${props.id}/tasks`, { ...task, estimated_cost: task.estimated_cost === '' ? null : Number(task.estimated_cost) }), 'Task added');
     Object.assign(task, { title: '', estimated_cost: '', assignee_id: null });
 }
 const toggleTask = (t) => run(() => api.patch(`/plans/${props.id}/tasks/${t.id}`, { done: !t.done }));
-const removeTask = (t) => run(() => api.del(`/plans/${props.id}/tasks/${t.id}`));
+const removeTask = (t) => run(() => api.del(`/plans/${props.id}/tasks/${t.id}`), 'Task removed');
 
 // Fair share: a private monthly comfort amount and an anonymous one-month pause.
 const capacity = ref('');
@@ -154,12 +154,12 @@ const makeOwner = (m) => confirm(`Make ${m.name} the owner? You'll become a regu
 
 async function leave() {
     if (!confirm('Leave this plan?')) return;
-    await run(() => api.post(`/plans/${props.id}/leave`));
+    await run(() => api.post(`/plans/${props.id}/leave`), 'You left the plan');
     router.replace('/goals/together');
 }
 async function destroy() {
     if (!confirm(`Delete "${plan.value.name}" for everyone? This cannot be undone.`)) return;
-    await run(() => api.del(`/plans/${props.id}`));
+    await run(() => api.del(`/plans/${props.id}`), 'Plan deleted');
     router.replace('/goals/together');
 }
 

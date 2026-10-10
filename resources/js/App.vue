@@ -11,6 +11,7 @@ import { useAuth } from './stores/auth';
 import { useUi } from './stores/ui';
 import { api, onFresh } from './api';
 import { prefetchPages } from './router';
+import { progress } from './progress';
 import { autoStart, ai } from './ai/engine';
 import { pref, setPref } from './format';
 
@@ -59,7 +60,17 @@ async function refreshUnread() {
 }
 
 // Offline-first: changes are saved on the device first, then synced to the cloud.
-onSync('queued', () => setTimeout(() => ui.toast("Saved on this device. Amo will sync it when you're online."), 60));
+onSync('queued', () => setTimeout(() => ui.toastOffline(), 60));
+
+// Top loading bar: only shown when something takes long enough to notice.
+const showBar = ref(false);
+let barTimer;
+watch(() => progress.active > 0, (busy) => {
+    clearTimeout(barTimer);
+    if (busy) barTimer = setTimeout(() => (showBar.value = true), 150);
+    else showBar.value = false;
+});
+const toastIcon = { success: '✓', error: '!', info: 'i' };
 onSync('synced', (n) => {
     invalidateContext();
     ui.changed();
@@ -187,10 +198,21 @@ watch(() => route.query.add, (v) => {
 
     <AddTransactionSheet :open="ui.addOpen" @close="ui.addOpen = false; ui.addPreset = null" />
 
+    <!-- Loading bar -->
+    <Transition name="fade">
+        <div v-if="showBar" class="pointer-events-none fixed inset-x-0 top-0 z-[70] h-0.5 overflow-hidden bg-indigo-600/20" role="progressbar" aria-label="Loading">
+            <div class="loading-bar h-full w-1/3 rounded-full bg-indigo-600" />
+        </div>
+    </Transition>
+
     <!-- Toasts -->
-    <div class="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[60] flex flex-col items-center gap-2 px-4">
-        <TransitionGroup enter-from-class="opacity-0 -translate-y-2" leave-to-class="opacity-0" enter-active-class="transition" leave-active-class="transition">
-            <div v-for="t in ui.toasts" :key="t.id" class="pointer-events-auto max-w-sm rounded-2xl px-4 py-2.5 text-sm font-medium shadow-lg" :class="t.type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'">{{ t.message }}</div>
+    <div class="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite">
+        <TransitionGroup name="toast">
+            <div v-for="t in ui.toasts" :key="t.id" role="status" class="pointer-events-auto flex max-w-sm items-center gap-2.5 rounded-2xl py-2.5 pr-2 pl-3 text-sm font-medium shadow-lg" :class="t.type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'" @click="ui.dismiss(t.id)">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold" :class="t.type === 'error' ? 'bg-white/25' : t.type === 'info' ? 'bg-sky-400 text-white' : 'bg-emerald-500 text-white'">{{ toastIcon[t.type] || '✓' }}</span>
+                <span class="flex-1">{{ t.message }}</span>
+                <button class="rounded-full p-1 opacity-60 hover:opacity-100" aria-label="Dismiss" @click.stop="ui.dismiss(t.id)"><Icon name="x" size="14" /></button>
+            </div>
         </TransitionGroup>
     </div>
 </template>

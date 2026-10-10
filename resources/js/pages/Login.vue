@@ -1,4 +1,6 @@
 <script setup>
+import Spinner from '../components/Spinner.vue';
+import { useUi } from '../stores/ui';
 import { reactive, ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '../stores/auth';
@@ -37,6 +39,7 @@ const problems = computed(() => {
 const valid = computed(() => !Object.keys(problems.value).length);
 const err = (k) => errors.value[k]?.[0] || (touched[k] && problems.value[k]) || '';
 const errors = ref({});
+const ui = useUi();
 const busy = ref(false);
 const isRegister = computed(() => props.mode === 'register');
 
@@ -47,6 +50,7 @@ async function submit() {
     errors.value = {};
     try {
         isRegister.value ? await auth.register({ ...form, name: form.name.trim(), email: form.email.trim() }) : await auth.login(form.email.trim(), form.password);
+        ui.toast(isRegister.value ? `Account created. Welcome, ${auth.user.name.split(' ')[0]}! 🎉` : `Signed in successfully. Welcome back, ${auth.user.name.split(' ')[0]}! 👋`);
         if (route.query.next) setPref('after_onboarding', route.query.next);
         router.replace(auth.user.onboarded ? (route.query.next || '/') : '/welcome');
     } catch (e) {
@@ -99,7 +103,7 @@ async function submit() {
                     <input id="pw2" v-model="form.password_confirmation" :type="showPw ? 'text' : 'password'" class="input" autocomplete="new-password" maxlength="72" required :aria-invalid="!!err('password_confirmation')" @blur="touched.password_confirmation = true" />
                     <p v-if="err('password_confirmation')" class="mt-1 text-xs text-rose-600">{{ err('password_confirmation') }}</p>
                 </div>
-                <button class="btn-primary w-full !py-3" :disabled="busy || (isRegister && !valid)">{{ busy ? 'Please wait…' : isRegister ? 'Create account' : 'Log in' }}</button>
+                <button class="btn-primary w-full !py-3" :disabled="busy || (isRegister && !valid)"><Spinner v-if="busy" />{{ busy ? (isRegister ? 'Creating account…' : 'Signing in…') : isRegister ? 'Create account' : 'Log in' }}</button>
             </form>
             <p class="mt-6 text-center text-sm text-slate-500">
                 <template v-if="isRegister">Already have an account? <RouterLink :to="{ path: '/login', query: route.query }" class="font-semibold text-indigo-600">Log in</RouterLink></template>

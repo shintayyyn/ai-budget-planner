@@ -1,4 +1,5 @@
 <script setup>
+import Spinner from './Spinner.vue';
 import { ref, reactive, watch, computed } from 'vue';
 import Sheet from './Sheet.vue';
 import Icon from './Icon.vue';
@@ -154,7 +155,7 @@ async function save() {
                 </div>
             </div>
 
-            <button class="btn-primary w-full !py-3" :disabled="saving || scan.busy">{{ saving ? 'Saving…' : 'Save' }}</button>
+            <button class="btn-primary w-full !py-3" :disabled="saving || scan.busy"><Spinner v-if="saving" />{{ saving ? 'Saving…' : 'Save' }}</button>
         </form>
     </Sheet>
 </template>

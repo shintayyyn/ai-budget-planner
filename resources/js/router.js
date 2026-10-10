@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuth } from './stores/auth';
 import { setUnauthorizedHandler } from './api';
+import { progress } from './progress';
 
 const routes = [
     { path: '/login', component: () => import('./pages/Login.vue'), meta: { guest: true } },
@@ -31,7 +32,12 @@ const router = createRouter({
     scrollBehavior: () => ({ top: 0 }),
 });
 
+let navDone = null;
 router.beforeEach(async (to) => {
+    navDone?.();
+    progress.active++;
+    let ended = false;
+    navDone = () => { if (!ended) { ended = true; progress.active = Math.max(0, progress.active - 1); } };
     const auth = useAuth();
     await auth.load();
     if (!auth.loggedIn && !to.meta.guest) return { path: '/login', query: to.fullPath !== '/' ? { next: to.fullPath } : {} };
@@ -44,6 +50,9 @@ router.beforeEach(async (to) => {
 export function prefetchPages() {
     for (const r of routes) if (typeof r.component === 'function') r.component().catch(() => {});
 }
+
+router.afterEach(() => navDone?.());
+router.onError(() => navDone?.());
 
 setUnauthorizedHandler(() => {
     const auth = useAuth();

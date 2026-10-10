@@ -4,6 +4,7 @@
 import { cache, newKey, describe } from './offline';
 import { enqueue } from './sync';
 import { applyOptimistic } from './optimistic';
+import { track } from './progress';
 
 const TOKEN_KEY = 'abp_token';
 
@@ -104,7 +105,7 @@ async function request(method, path, body, { query, raw } = {}) {
                 return saved;
             }
         }
-        return networkGet(url, cacheKey);
+        return track(networkGet(url, cacheKey));
     }
 
     const key = method === 'GET' ? null : newKey();
@@ -119,7 +120,7 @@ async function request(method, path, body, { query, raw } = {}) {
 
     let res;
     try {
-        res = await fetch(url, { method, headers: headersFor(body, key), body: body ? (isForm ? body : JSON.stringify(body)) : undefined });
+        res = await track(fetch(url, { method, headers: headersFor(body, key), body: body ? (isForm ? body : JSON.stringify(body)) : undefined }));
     } catch (e) {
         if (queueable) return queue();
         throw offline ? offlineError() : e;

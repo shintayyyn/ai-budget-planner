@@ -24,12 +24,13 @@ async function add() {
     try {
         const res = await api.post(path.value, { ...draft });
         Object.assign(draft, { title: '', body: '' });
+        ui.toast('Note added');
         if (!res?.queued) load();
     } catch (e) { ui.error(e); }
 }
 async function pin(n) { try { await api.patch(`${path.value}/${n.id}`, { pinned: !n.pinned }); load(); } catch (e) { ui.error(e); } }
 async function save(n) { try { await api.patch(`${path.value}/${n.id}`, { title: n.title, body: n.body }); open.value = null; ui.toast('Note saved'); load(); } catch (e) { ui.error(e); } }
-async function remove(n) { if (!confirm('Delete this note?')) return; try { await api.del(`${path.value}/${n.id}`); load(); } catch (e) { ui.error(e); } }
+async function remove(n) { if (!confirm('Delete this note?')) return; try { await api.del(`${path.value}/${n.id}`); load(); ui.toast('Note deleted'); } catch (e) { ui.error(e); } }
 </script>
 
 <template>

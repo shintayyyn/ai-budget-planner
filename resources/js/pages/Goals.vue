@@ -1,4 +1,5 @@
 <script setup>
+import Spinner from '../components/Spinner.vue';
 import { ref, reactive, watch } from 'vue';
 import { api } from '../api';
 import { useUi } from '../stores/ui';
@@ -13,6 +14,7 @@ const goals = ref(null);
 const open = ref(false);
 const editingId = ref(null);
 const errors = ref({});
+const busy = ref(false);
 const blank = () => ({ name: '', icon: '🎯', target_amount: '', saved_amount: '', target_date: '', monthly_contribution: '', priority: 2 });
 const form = reactive(blank());
 const moveGoal = ref(null);
@@ -41,21 +43,26 @@ async function save() {
         monthly_contribution: form.monthly_contribution === '' ? null : Number(form.monthly_contribution),
         target_date: form.target_date || null,
     };
+    busy.value = true;
     try {
         editingId.value ? await api.put(`/goals/${editingId.value}`, payload) : await api.post('/goals', payload);
         open.value = false;
         invalidateContext();
         load();
-        ui.toast('Goal saved');
-    } catch (e) { errors.value = e.errors || {}; if (!e.errors) ui.error(e); }
+        ui.toast(editingId.value ? `${form.name} updated` : `Goal "${form.name}" created 🎯`);
+    } catch (e) { errors.value = e.errors || {}; if (!e.errors) ui.error(e); } finally { busy.value = false; }
 }
 
 async function remove() {
     if (!confirm(`Delete ${form.name}? Saved money stays in your balance records.`)) return;
-    await api.del(`/goals/${editingId.value}`);
-    open.value = false;
-    invalidateContext();
-    load();
+    busy.value = true;
+    try {
+        await api.del(`/goals/${editingId.value}`);
+        open.value = false;
+        invalidateContext();
+        load();
+        ui.toast(`${form.name} deleted`);
+    } catch (e) { ui.error(e); } finally { busy.value = false; }
 }
 
 async function move(sign) {
@@ -91,6 +98,7 @@ const ring = (pct) => `conic-gradient(#10b981 ${pct * 3.6}deg, rgb(148 163 184 /
             <button class="btn-primary shrink-0" @click="edit(null)"><Icon name="plus" size="18" />New goal</button>
         </div>
 
+        <div v-if="!goals" class="grid gap-4 md:grid-cols-2"><div v-for="n in 2" :key="n" class="skeleton h-44" /></div>
         <div v-if="goals && !goals.length" class="card py-10 text-center">
             <p class="text-4xl">🎯</p>
             <p class="mt-2 font-medium">No goals yet</p>
@@ -165,8 +173,8 @@ const ring = (pct) => `conic-gradient(#10b981 ${pct * 3.6}deg, rgb(148 163 184 /
                         <button v-for="p in [[1, 'High'], [2, 'Medium'], [3, 'Low']]" :key="p[0]" type="button" class="chip ring-1" :class="form.priority === p[0] ? 'bg-indigo-600 text-white ring-indigo-600' : 'ring-slate-200 dark:ring-slate-700'" @click="form.priority = p[0]">{{ p[1] }}</button>
                     </div>
                 </div>
-                <button class="btn-primary w-full">Save goal</button>
-                <button v-if="editingId" type="button" class="btn-danger w-full" @click="remove"><Icon name="trash" size="18" />Delete goal</button>
+                <button class="btn-primary w-full" :disabled="busy"><Spinner v-if="busy" />{{ busy ? 'Saving…' : 'Save goal' }}</button>
+                <button v-if="editingId" type="button" class="btn-danger w-full" :disabled="busy" @click="remove"><Icon name="trash" size="18" />Delete goal</button>
             </form>
         </Sheet>
 
