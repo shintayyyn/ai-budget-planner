@@ -6,6 +6,7 @@ import AddTransactionSheet from './components/AddTransactionSheet.vue';
 import Mascot from './components/Mascot.vue';
 import SyncChip from './components/SyncChip.vue';
 import OfflineReady from './components/OfflineReady.vue';
+import Toasts from './components/Toasts.vue';
 import { ready, needsPrepare, prepareOffline } from './readiness';
 import { sync, startSync, onSync } from './sync';
 import { invalidateContext } from './ai/assistant';
@@ -72,7 +73,6 @@ watch(() => progress.active > 0, (busy) => {
     if (busy) barTimer = setTimeout(() => (showBar.value = true), 150);
     else showBar.value = false;
 });
-const toastIcon = { success: '✓', error: '!', info: 'i' };
 onSync('synced', (n) => {
     invalidateContext();
     ui.changed();
@@ -216,14 +216,5 @@ watch(() => route.query.add, (v) => {
         </div>
     </Transition>
 
-    <!-- Toasts -->
-    <div class="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite">
-        <TransitionGroup name="toast">
-            <div v-for="t in ui.toasts" :key="t.id" role="status" class="pointer-events-auto flex max-w-sm items-center gap-2.5 rounded-2xl py-2.5 pr-2 pl-3 text-sm font-medium shadow-lg" :class="t.type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'" @click="ui.dismiss(t.id)">
-                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold" :class="t.type === 'error' ? 'bg-white/25' : t.type === 'info' ? 'bg-sky-400 text-white' : 'bg-emerald-500 text-white'">{{ toastIcon[t.type] || '✓' }}</span>
-                <span class="flex-1">{{ t.message }}</span>
-                <button class="rounded-full p-1 opacity-60 hover:opacity-100" aria-label="Dismiss" @click.stop="ui.dismiss(t.id)"><Icon name="x" size="14" /></button>
-            </div>
-        </TransitionGroup>
-    </div>
+    <Toasts />
 </template>
