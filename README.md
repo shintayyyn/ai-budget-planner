@@ -1,32 +1,136 @@
-# Amotan
+<p align="center">
+  <img src="public/icons/icon-512.png" width="120" alt="Amo, the Amotan mascot" />
+</p>
 
-<img src="public/icons/icon-192.png" width="72" alt="Amo, the Amotan mascot" align="right" />
+<h1 align="center">Amotan</h1>
+<p align="center"><b>Your offline-first money buddy.</b><br/>Make it to payday, every time, even with no signal.</p>
 
-An **offline-first**, installable money buddy that helps people make it to payday. It plans each paycheck, tracks spending, warns before overspending, stress-tests the next pay cycles and answers money questions with an AI that runs **on the user's own device**. It works with no internet and syncs to the cloud when online.
+<p align="center">
+  <a href="docs/media/Amotan-Promo-1min.mp4"><b>▶ Watch the 1-minute promo video</b></a> ·
+  <a href="#-install-amotan-on-your-phone-first-time-users">Install guide</a> ·
+  <a href="#-features">Features</a> ·
+  <a href="#-faq">FAQ</a> ·
+  <a href="#-for-developers">Developers</a>
+</p>
 
-Meet **Amo**, the mascot: a little coin pouch with a sprout (savings that grow). Amo's mood follows your money (happy, thinking, worried, celebrating) and falls asleep when you're offline.
+---
 
-**Stack:** Laravel 13 (PHP 8.5) · MySQL/MariaDB · Vue 3 + Vite + Tailwind 4 · WebLLM (on-device LLM) · Tesseract.js (on-device OCR)
+## 👋 What is Amotan?
 
-## Features
+Amotan is a budgeting app for students, workers, families and barkadas. It tells you how much you can **safely spend until payday**, warns you **before** money problems happen, and helps groups save together fairly.
 
-| Area | What it does |
+Amotan is **offline-first**. Your budget lives on your phone, so it works in the province, on the jeep or with no load. When you're online it **syncs to the cloud** automatically, so your data is backed up and you can log in on another phone.
+
+Its AI assistant, **Amo**, runs **on your own phone**. Your money data is not sent to a cloud AI company, there are no AI subscription fees, and it still answers when you're offline.
+
+### Meet Amo
+
+Amo is a little coin pouch with a sprout, because savings grow. Amo reacts to your money with 17 moods: cheering when you're on track, worried before a shortfall, asleep when you're offline. Tap Amo anywhere for a surprise.
+
+<p align="center"><img src="docs/images/amo-moods.png" width="720" alt="Amo's 17 moods and poses" /></p>
+
+## 🎬 Promotional video
+
+[**▶ Amotan in 1 minute**](docs/media/Amotan-Promo-1min.mp4): a real demo of the app covering offline sync, Domino Check, barkada plans, personal QR and local AI. Click it, then press **View raw** or the play button to watch.
+
+## ✨ Features
+
+| | |
 |---|---|
-| **Smart budgeting** | Builds a monthly budget from income, fixed bills, savings goals and the last 3 months of spending (an adaptive 50/30/20). Editable per category. |
-| **Expense tracking** | Manual entry, quick-add text ("coffee 4.50 at Starbucks"), chat ("spent 18 on pizza yesterday"), or receipt scanning. Auto-categorised by keywords. |
-| **AI assistant ("Amo")** | Answers "Can I afford…?", "How much can I spend today?", "Where did my money go?", goals, debt and payday questions, and logs expenses from chat. |
-| **Savings goals** | Progress, required monthly amount, estimated finish date, and a "what if I saved X/month?" calculator. |
-| **Spending alerts** | Over budget, near the limit, month pace too high, *money will run out before payday*, bills due soon, and shared-plan invitations. |
-| **Payday planner** | Splits each paycheck into bills → debts → essentials → savings → buffer, then a daily allowance. Surplus goes to the highest-interest debt. |
-| **Bills & debts** | Due dates, "mark paid" (logs the expense, reduces the debt), avalanche ordering, payoff estimates. |
-| **Plan together** | Shared plans (outings, trips, household pots, group goals) that can be **🔒 Private** or **👥 Group**. Invite people by **QR code**, link, 8-character code or email. Members add contributions and shared expenses, follow a checklist, then **settle up** with the fewest payments. Each member's GCash/Maya handle is shown, and either side can record a payment. |
-| **Offline-first + cloud sync** | Every screen you've opened is saved on the device (IndexedDB), so the app opens and works with no signal. Changes made offline (expenses, bills, goals, plan entries, buddies) go into an on-device outbox and sync automatically when the device is back online. Each change carries an `Idempotency-Key`, so a retry is never applied twice (`app/Http/Middleware/IdempotentRequest.php`). A sync chip shows the status, and **Settings → Offline & sync** lists pending and rejected changes. Logging out wipes the device. |
-| **Personal QR** | Every user gets an auto-generated code (e.g. `AMO-7KX3PQ`). The QR is drawn on the device with Amo in the middle, and can be shared as an image card via the phone's share sheet, saved, or copied as a link. Scanning a friend's QR makes you **buddies** (queued if offline), so you can invite each other to group plans in one tap without sharing emails. The code can be reset. |
-| **Domino Check** | A day-by-day stress test of the next two pay cycles: salary late, a surprise expense, bills going up, or an income cut. It shows the first day you'd go short, the chain of bills that tips you over, bills that collide, the buffer you'd need and what to postpone. Runs entirely on the device (`resources/js/sim/domino.js`). |
-| **Fair-share group goals** | In group plans with a target, each member can set a private monthly amount they can comfortably give. Suggested shares are proportional to it and never exceed it. Members can pause for a month anonymously. If the group can't cover the monthly need, the plan shows the gap and a realistic new date, rather than asking everyone else to pay more. Nobody sees anyone else's amount. |
-| **PWA** | Installable on Android, iOS and desktop. Offline app shell, offline data, and home-screen shortcuts. |
+| 💸 **Safe to spend** | What you can spend until payday after bills and savings, plus a daily allowance. |
+| 📴 **Works offline** | Everything you've opened is saved on the device. Changes you make offline wait in an outbox and sync when you're back online, never saved twice. |
+| 🁢 **Domino Check** | "What if my salary is 5 days late?" or "What if a ₱3,000 emergency happens?" See the day you'd go short, which bills tip over, and the buffer you need. |
+| 👫 **Barkada plans** | Group goals and trips with a **chat room**, **shared notes**, a **calendar**, to-dos, expense splitting and settle-up in the fewest payments. |
+| ⚖️ **Fair share** | Each member privately sets what they can comfortably give. Nobody sees anyone else's amount, and members can pause for a month without shame. |
+| 🔳 **Personal QR** | Every user gets an auto-generated code (like `AMO-7KX3PQ`). Share it as an image, link or code. Scanning it adds a buddy you can invite to plans in one tap. |
+| 🤖 **Local AI (Amo)** | Ask "Can I afford a ₱2,500 phone?", "Where did my money go?" or "What if my salary is late?". It runs on the device and uses the app's own calculated numbers, so the answers match your data. |
+| 🧾 **Receipt scan** | Snap a receipt and it's read on your phone (on-device OCR). |
+| 🎯 **Goals, bills & debts** | Savings goals with ETA, bill reminders, a debt payoff plan, a payday planner and budgets. |
+| 🔐 **Private by design** | Strong password rules, a show-password toggle, and logging out wipes data from the device (good for shared phones). |
 
-## The AI runs on the device
+<p align="center">
+  <img src="docs/images/home.png" width="180" alt="Home" />
+  <img src="docs/images/domino-check.png" width="180" alt="Domino Check" />
+  <img src="docs/images/barkada-chat.png" width="180" alt="Barkada chat" />
+  <img src="docs/images/my-qr.png" width="180" alt="My QR" />
+  <img src="docs/images/assistant.png" width="180" alt="Local AI assistant" />
+</p>
+
+## 📲 Install Amotan on your phone (first-time users)
+
+Amotan is a web app you **install from the browser**. No Play Store or App Store needed. It takes about a minute.
+
+> **Important:** turn on internet the **first time** you open Amotan, so it can download itself to your phone. After that it opens and works **without internet**.
+
+### Android (Chrome)
+
+1. Open **Chrome** and go to your Amotan link.
+2. Tap **Create an account**, or log in.
+3. Tap the **Install Amotan** banner, or tap **⋮ (menu) → Install app / Add to Home screen**.
+4. Tap **Install**. Amo now appears on your home screen 🎉
+5. Open Amotan from the home screen icon, not the browser.
+
+### iPhone / iPad (Safari)
+
+1. Open **Safari** (it must be Safari) and go to your Amotan link.
+2. Create an account or log in.
+3. Tap the **Share** button (square with an arrow ↑).
+4. Scroll down and tap **Add to Home Screen**, then **Add**.
+5. Open Amotan from the new home screen icon.
+
+### Laptop / Desktop (Chrome or Edge)
+
+Open the link, then click the **install icon** (⊕) at the right end of the address bar, or **Menu → Install Amotan**.
+
+### Creating your account
+
+- **Name:** 2 to 60 letters (spaces, dots, hyphens and apostrophes are OK).
+- **Email:** a real email format, e.g. `juan@gmail.com`. Capital letters don't matter.
+- **Password:** at least **8 characters with a letter and a number**. Tap the 👁 eye icon to show or hide it. Type it again in **Confirm password**.
+
+<p align="center"><img src="docs/images/sign-up.png" width="220" alt="Sign up form with show-password and rules" /></p>
+
+### First steps after installing
+
+1. **Welcome setup:** enter your income, payday and main bills. Amo builds your budget.
+2. **Home:** check **Safe to spend** and your daily allowance.
+3. **Add an expense:** tap **＋**, or tell Amo "lunch 120".
+4. **Try Domino Check:** Plan → Domino Check → "Salary 5 days late".
+5. **Share your QR:** Settings → **My QR & buddies** → Share.
+6. **Start a barkada plan:** Goals → Together → create a plan and invite buddies.
+
+### Using it offline
+
+- Open Amotan as usual. When you're offline, Amo sleeps 😴 and a banner says **Offline**.
+- Keep adding expenses, notes, chat messages and events. They're saved on your phone.
+- When you're back online they sync automatically (**Settings → Offline & sync** shows what's waiting).
+- Things that need the server, such as creating an account or joining a new plan, wait until you're online.
+
+### Demo account
+
+To look around without signing up: **`demo@budget.test` / `password`**. It includes 3 months of sample data, bills, goals and a barkada plan.
+
+## ❓ FAQ
+
+**Do I need internet?** Only the first time (to install) and to sync. Everything else works offline.
+
+**Is my money data safe?** Your data syncs only to your own Amotan account over HTTPS. The AI and receipt reading run on your phone, and no third-party AI service is used. Logging out wipes the device.
+
+**What if I lose my phone?** Log in on a new phone. Anything that had synced is restored from the cloud.
+
+**Why local AI instead of cloud AI?** It keeps your finances private, it's free to run (no per-question AI bills), it's fast, and it works with no signal. Amo takes its numbers from the app's own calculations, so it doesn't make up figures.
+
+**My phone doesn't support the AI model.** That's fine. Amo switches to **instant mode**, which gives the same answers instantly without downloading a model.
+
+**I can't log in.** Check the email spelling. Capital letters and spaces don't matter. Tap the 👁 icon to check your password.
+
+**Where do I find my QR?** Settings → **My QR & buddies**.
+
+## 🛠 For developers
+
+Amotan is a Laravel 13 + Vue 3 PWA (Vite, Tailwind 4, Pinia) with a MySQL/MariaDB database. The offline cache and outbox live in IndexedDB (`resources/js/offline.js`, `resources/js/sync.js`). Synced writes carry an `Idempotency-Key`, so retries are never applied twice (`app/Http/Middleware/IdempotentRequest.php`).
+
+### The AI runs on the device
 
 - **Language model:** [WebLLM](https://github.com/mlc-ai/web-llm) runs Qwen 2.5 / Llama 3.2 in the browser on WebGPU, inside a Web Worker. The model downloads once (about 400 MB to 2 GB, depending on the model chosen in Settings), is cached by the browser, and then works offline. Phones default to Qwen 2.5 0.5B; laptops default to 1.5B.
 - **Grounded numbers:** the model never does the maths. `app/Services/FinanceService.php` calculates every figure (safe to spend, affordability, projections). The model gets those facts plus a draft answer and only rephrases them.
@@ -35,7 +139,7 @@ Meet **Amo**, the mascot: a little coin pouch with a sprout (savings that grow).
 - **Optional self-hosted server model:** set `AI_SERVER_DRIVER=ollama` (plus `OLLAMA_URL` and `OLLAMA_MODEL`) to let users choose a model running on your own machine instead. No third-party AI API is used anywhere.
 - **Not used on purpose:** browser speech recognition, because Chrome sends the audio to Google.
 
-## Running it locally
+### Running it locally
 
 Requirements: PHP 8.3+ (with `intl` and `pdo_mysql`), Composer, Node 20+, MySQL 8 or MariaDB 10.4+.
 
@@ -51,7 +155,7 @@ php artisan serve
 
 Open http://127.0.0.1:8000 and log in with the demo account from the seeder: **demo@budget.test / password** (3 months of sample data, bills, debts and goals).
 
-### On a phone
+#### On a phone
 
 Service workers (installing and offline use) and WebGPU only work over **HTTPS**, or on `localhost`. To try it on a phone, put it behind HTTPS, for example with a tunnel:
 
@@ -64,16 +168,16 @@ Then open the HTTPS URL on the phone and choose **Install** (Android) or **Share
 
 WebGPU support: Chrome/Edge 113+ (desktop and Android), Safari 18+ (iOS 18 / macOS). Other browsers get instant mode automatically.
 
-## Tests
+### Tests
 
 ```bash
-php artisan test   # 21 feature tests: auth, money math, payday planner, alerts, budgets, shared plans, settle-up, privacy
-npm test           # 25 unit tests: amount/date/intent parsing, receipt extraction
+php artisan test   # 31 feature tests: auth rules, money math, payday planner, alerts, shared plans, chat/notes/calendar, buddies, idempotent sync, privacy
+npm test           # 39 unit tests: amount/date/intent parsing, receipt extraction, Domino Check, Amo moods
 ```
 
 Feature tests run against MySQL (`ai_budget_planner_test`, see `phpunit.xml`), because the app uses MySQL date functions.
 
-## Project map
+### Project map
 
 ```
 app/Services/FinanceService.php     pay periods, safe-to-spend, projections, affordability, AI context
@@ -89,15 +193,6 @@ resources/js/ai/receipt.js          on-device OCR + receipt field extraction
 resources/js/pages/*                Vue screens; App.vue is the mobile shell (bottom tabs)
 public/sw.js, manifest.webmanifest  PWA
 ```
-
-## Local test accounts
-
-Created during development in the local database (not part of the seeder):
-
-- `onboarding@budget.test` / `password123`: went through the onboarding wizard, owns the "Beach day" shared plan
-- `friend@budget.test` / `password123`: joined that plan by code
-
-Reset everything with `php artisan migrate:fresh --seed`.
 
 ## Not financial advice
 
