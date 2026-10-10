@@ -79,11 +79,13 @@
     .page-enter-active, .page-leave-active, .sheet-enter-active, .sheet-leave-active, .sheet-enter-active .sheet-panel, .sheet-leave-active .sheet-panel, .list-move, .list-enter-active, .list-leave-active { transition: none; }
 }
 
-.toast-enter-active { transition: opacity .25s ease, transform .3s cubic-bezier(.32, .72, 0, 1); }
-.toast-leave-active { transition: opacity .2s ease, transform .2s ease; }
-.toast-enter-from { opacity: 0; transform: translateY(-12px) scale(.96); }
-.toast-leave-to { opacity: 0; transform: scale(.96); }
-.toast-move { transition: transform .25s ease; }
+.toast-enter-active { transition: opacity .35s ease, transform .45s cubic-bezier(.21, 1.02, .73, 1); }
+.toast-leave-active { transition: opacity .22s ease, transform .22s ease-in; }
+.toast-enter-from { opacity: 0; transform: translateY(-16px) scale(.94); }
+.toast-leave-to { opacity: 0; transform: translateY(-8px) scale(.96); }
+.toast-move { transition: transform .35s cubic-bezier(.21, 1.02, .73, 1); }
+@keyframes toast-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.toast-timer { animation: toast-timer linear forwards; }
 .fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 @keyframes loading-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
@@ -92,6 +94,7 @@
 .skeleton { @apply rounded-xl bg-slate-200 dark:bg-slate-800; animation: skeleton 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
     .toast-enter-active, .toast-leave-active, .toast-move { transition: none; }
+    .toast-timer { animation: none; }
     .loading-bar, .skeleton { animation: none; }
 }
 
