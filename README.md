@@ -194,6 +194,10 @@ resources/js/pages/*                Vue screens; App.vue is the mobile shell (bo
 public/sw.js, manifest.webmanifest  PWA
 ```
 
+## Project description & technical disclosure
+
+See [docs/ABOUT-AND-TECHNICAL-DISCLOSURE.md](docs/ABOUT-AND-TECHNICAL-DISCLOSURE.md) for the problems Amotan solves and the full list of technologies, libraries, licenses and browser APIs used.
+
 ## Not financial advice
 
 The assistant gives general budgeting help only. For investment, tax or legal decisions, users should talk to a licensed professional.
