@@ -43,15 +43,21 @@
 ### 2.1 Architecture overview
 
 ```
-Phone / browser (PWA)                               Server (Laravel)
-├─ Vue 3 app (Vite build)                           ├─ REST API  /api/*  (Laravel Sanctum bearer tokens)
-├─ Service Worker: app shell + static + last data   ├─ Idempotency middleware (Idempotency-Key → sync_receipts)
-├─ IndexedDB "amotan": kv cache + outbox            ├─ Finance services: safe-to-spend, projections, payday plan,
-├─ On-device AI: WebLLM (WebGPU, Web Worker)        │   budgets, alerts, shared plans, settle-up
-│   or rule-based "Instant mode"                    └─ MySQL / MariaDB
+Phone / browser (PWA)
+├─ Vue 3 app (Vite build)
+├─ Service Worker: app shell + static files + last-known data
+├─ IndexedDB "amotan": kv cache + outbox
+├─ On-device AI: WebLLM (WebGPU, Web Worker) or rule-based "Instant mode"
 ├─ On-device OCR: Tesseract.js (self-hosted files)
 ├─ On-device QR: qrcode (render) + BarcodeDetector (scan)
 └─ Domino Check simulator (pure JavaScript, on device)
+
+Server (Laravel)
+├─ REST API /api/* (Laravel Sanctum bearer tokens)
+├─ Idempotency middleware (Idempotency-Key → sync_receipts)
+├─ Finance services: safe-to-spend, projections, payday plan,
+│  budgets, alerts, shared plans, settle-up
+└─ MySQL / MariaDB
 ```
 
 - **Offline flow:** GET responses are cached in IndexedDB and returned offline. Writes made offline go to an IndexedDB **outbox** and are replayed when online. Each write carries a unique `Idempotency-Key`, and the server stores the result in `sync_receipts` so a retried write is never applied twice. Logging in, registering and AI requests are not queued.
