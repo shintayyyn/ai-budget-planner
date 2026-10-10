@@ -60,7 +60,8 @@ async function run(fn, success) {
     busy.value = true;
     try {
         const res = await fn();
-        if (res && res.id) plan.value = res;
+        if (res?.queued) await load();
+        else if (res && res.id) plan.value = res;
         if (success) ui.toast(success);
         return res;
     } catch (e) { ui.error(e); } finally { busy.value = false; }

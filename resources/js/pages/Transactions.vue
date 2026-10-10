@@ -109,7 +109,7 @@ const sourceLabel = { manual: 'Added manually', chat: 'Logged via assistant', re
                 <span>{{ niceDate(g.date, { weekday: 'long', month: 'short', day: 'numeric' }) }}</span>
                 <span>{{ g.net >= 0 ? '+' : '−' }}{{ money(Math.abs(g.net)) }}</span>
             </div>
-            <ul class="card divide-y divide-slate-100 !p-0 dark:divide-slate-800">
+            <TransitionGroup tag="ul" name="list" class="card relative divide-y divide-slate-100 !p-0 dark:divide-slate-800">
                 <li v-for="t in g.list" :key="t.id">
                     <button class="flex w-full items-center gap-3 px-4 py-3 text-left" @click="selected = t">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg" :style="{ background: (t.category?.color || '#64748b') + '22' }">{{ t.category?.icon || '💸' }}</span>
@@ -120,7 +120,7 @@ const sourceLabel = { manual: 'Added manually', chat: 'Logged via assistant', re
                         <p class="text-sm font-semibold" :class="t.type === 'income' ? 'text-emerald-600' : ''">{{ t.type === 'income' ? '+' : '−' }}{{ money(t.amount) }}</p>
                     </button>
                 </li>
-            </ul>
+            </TransitionGroup>
         </section>
 
         <button v-if="page < lastPage" class="btn-ghost w-full" :disabled="loading" @click="page++; load(false)">Load more</button>

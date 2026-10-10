@@ -49,7 +49,8 @@ function openEdit() {
 async function saveEdit() {
     busy.value = true;
     try {
-        data.value = await api.put('/budget', { month: month.value, lines: draft.value.filter((l) => l.amount !== '' && l.amount !== null).map((l) => ({ category_id: l.category_id, amount: Number(l.amount) })) });
+        const res = await api.put('/budget', { month: month.value, lines: draft.value.filter((l) => l.amount !== '' && l.amount !== null).map((l) => ({ category_id: l.category_id, amount: Number(l.amount) })) });
+        if (res?.queued) await load(); else data.value = res;
         editOpen.value = false;
         invalidateContext();
         ui.changed();
