@@ -13,6 +13,11 @@
   <a href="#-for-developers">Developers</a>
 </p>
 
+<p align="center">
+  <a href="docs/images/amotan-quick-start.jpg"><img src="docs/images/amotan-quick-start.jpg" width="760" alt="Amotan quick start infographic: how to install on Android, iPhone and laptop, six things to try on your first day, and how offline sync works" /></a>
+  <br/><sub>Quick start: how to install and use Amotan. Tap the image to see it full size.</sub>
+</p>
+
 ---
 
 ## 👋 What is Amotan?
