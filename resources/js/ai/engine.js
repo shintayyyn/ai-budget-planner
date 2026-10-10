@@ -103,6 +103,7 @@ export async function loadModel(base = ai.model || recommendedModel()) {
         ai.model = base;
         setPref('ai_model', base);
         setPref('ai_autoload', true);
+        setPref('ai_offline_skip', false);
         ai.cached[base] = true;
         ai.status = 'ready';
         return true;

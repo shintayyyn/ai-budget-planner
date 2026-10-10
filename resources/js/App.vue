@@ -5,6 +5,8 @@ import Icon from './components/Icon.vue';
 import AddTransactionSheet from './components/AddTransactionSheet.vue';
 import Mascot from './components/Mascot.vue';
 import SyncChip from './components/SyncChip.vue';
+import OfflineReady from './components/OfflineReady.vue';
+import { ready, needsPrepare, prepareOffline } from './readiness';
 import { sync, startSync, onSync } from './sync';
 import { invalidateContext } from './ai/assistant';
 import { useAuth } from './stores/auth';
@@ -90,6 +92,13 @@ onBeforeUnmount(() => {
     removeEventListener('beforeinstallprompt', onBeforeInstall);
 });
 watch(() => auth.loggedIn, (v) => v && autoStart());
+
+// After login (or after an update), save everything needed offline and show progress until 100%.
+watch(() => auth.user?.id, (id) => {
+    if (id && needsPrepare(id)) setTimeout(() => prepareOffline(id), 400);
+}, { immediate: true });
+addEventListener('online', () => auth.user && needsPrepare(auth.user.id) && prepareOffline(auth.user.id));
+watch(() => ready.finished, (f) => f && !ready.errors && ui.toast('100% ready. You can now use Amotan offline ✈️'));
 watch(() => ui.refreshKey, refreshUnread);
 watch(() => route.path, refreshUnread, { immediate: true });
 
@@ -197,6 +206,8 @@ watch(() => route.query.add, (v) => {
     </div>
 
     <AddTransactionSheet :open="ui.addOpen" @close="ui.addOpen = false; ui.addPreset = null" />
+
+    <OfflineReady v-if="auth.loggedIn" />
 
     <!-- Loading bar -->
     <Transition name="fade">
