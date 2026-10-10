@@ -114,8 +114,11 @@ function addFriend(c = friendCode.value) {
 
 async function removeBuddy(b) {
     if (!confirm(`Remove ${b.name} from your buddies?`)) return;
-    await api.del(`/connections/${b.id}`);
-    loadBuddies();
+    try {
+        await api.del(`/connections/${b.id}`);
+        loadBuddies();
+        ui.toast(`${b.name} removed from your buddies`);
+    } catch (e) { ui.error(e); }
 }
 </script>
 

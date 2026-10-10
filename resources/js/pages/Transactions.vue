@@ -56,7 +56,7 @@ async function remove(t) {
         selected.value = null;
         invalidateContext();
         ui.changed();
-        ui.toast('Deleted');
+        ui.toast('Transaction deleted');
     } catch (e) { ui.error(e); }
 }
 

@@ -14,15 +14,20 @@ onMounted(load);
 
 async function read(a) {
     if (a.read_at) return;
-    await api.post(`/alerts/${a.id}/read`);
-    a.read_at = new Date().toISOString();
-    ui.unreadAlerts = Math.max(0, ui.unreadAlerts - 1);
+    try {
+        await api.post(`/alerts/${a.id}/read`);
+        a.read_at = new Date().toISOString();
+        ui.unreadAlerts = Math.max(0, ui.unreadAlerts - 1);
+    } catch (e) { ui.error(e); }
 }
 
 async function readAll() {
-    await api.post('/alerts/read-all');
-    alerts.value.forEach((a) => (a.read_at ||= new Date().toISOString()));
-    ui.unreadAlerts = 0;
+    try {
+        await api.post('/alerts/read-all');
+        alerts.value.forEach((a) => (a.read_at ||= new Date().toISOString()));
+        ui.unreadAlerts = 0;
+        ui.toast('All alerts marked as read');
+    } catch (e) { ui.error(e); }
 }
 
 const style = {
@@ -39,6 +44,7 @@ const style = {
             <button v-if="alerts?.some((a) => !a.read_at)" class="shrink-0 text-sm font-medium text-indigo-600" @click="readAll">Mark all read</button>
         </div>
 
+        <div v-if="!alerts" class="space-y-3"><div v-for="n in 3" :key="n" class="skeleton h-20" /></div>
         <div v-if="alerts && !alerts.length" class="card py-10 text-center">
             <p class="text-4xl">✅</p>
             <p class="mt-2 font-medium">All clear</p>

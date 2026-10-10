@@ -1,4 +1,5 @@
 <script setup>
+import Spinner from '../components/Spinner.vue';
 import { ref, reactive, computed, watch } from 'vue';
 import { api } from '../api';
 import { useUi } from '../stores/ui';
@@ -14,13 +15,15 @@ const categories = ref([]);
 const open = ref(false);
 const editingId = ref(null);
 const errors = ref({});
+const loaded = ref(false);
+const busy = ref(false);
 const blank = () => ({ name: '', amount: '', due_day: 1, category_id: null, is_debt: false, debt_balance: '', interest_rate: '' });
 const form = reactive(blank());
 
 async function load() {
     try {
         [bills.value, categories.value] = await Promise.all([api.get('/bills'), categories.value.length ? categories.value : api.get('/categories')]);
-    } catch (e) { ui.error(e); }
+    } catch (e) { ui.error(e); } finally { loaded.value = true; }
 }
 watch(() => ui.refreshKey, load, { immediate: true });
 
@@ -47,21 +50,26 @@ function edit(b) {
 
 async function save() {
     const payload = { ...form, amount: Number(form.amount), debt_balance: form.is_debt && form.debt_balance !== '' ? Number(form.debt_balance) : null, interest_rate: form.is_debt && form.interest_rate !== '' ? Number(form.interest_rate) : null };
+    busy.value = true;
     try {
         editingId.value ? await api.put(`/bills/${editingId.value}`, payload) : await api.post('/bills', payload);
         open.value = false;
         invalidateContext();
         ui.changed();
-        ui.toast('Saved');
-    } catch (e) { errors.value = e.errors || {}; if (!e.errors) ui.error(e); }
+        ui.toast(editingId.value ? `${form.name} updated` : `${form.name} added to your bills`);
+    } catch (e) { errors.value = e.errors || {}; if (!e.errors) ui.error(e); } finally { busy.value = false; }
 }
 
 async function remove() {
     if (!confirm(`Delete ${form.name}?`)) return;
-    await api.del(`/bills/${editingId.value}`);
-    open.value = false;
-    invalidateContext();
-    ui.changed();
+    busy.value = true;
+    try {
+        await api.del(`/bills/${editingId.value}`);
+        open.value = false;
+        invalidateContext();
+        ui.changed();
+        ui.toast(`${form.name} deleted`);
+    } catch (e) { ui.error(e); } finally { busy.value = false; }
 }
 
 async function pay(b) {
@@ -94,7 +102,8 @@ const dueLabel = (b) => {
                 <h3 class="font-semibold">Recurring bills</h3>
                 <button class="text-sm font-medium text-indigo-600" @click="edit(null)">+ Add</button>
             </div>
-            <p v-if="!regular.length" class="py-3 text-sm text-slate-500">No bills yet.</p>
+            <div v-if="!loaded" class="space-y-2 py-2"><div v-for="n in 3" :key="n" class="skeleton h-10" /></div>
+            <p v-else-if="!regular.length" class="py-3 text-sm text-slate-500">No bills yet.</p>
             <TransitionGroup tag="ul" name="list" class="relative divide-y divide-slate-100 dark:divide-slate-800">
                 <li v-for="b in regular" :key="b.id" class="flex items-center gap-3 py-2.5">
                     <button class="min-w-0 flex-1 text-left" @click="edit(b)">
@@ -166,8 +175,8 @@ const dueLabel = (b) => {
                         <input id="bi" v-model="form.interest_rate" type="number" inputmode="decimal" min="0" max="100" step="0.1" class="input" />
                     </div>
                 </div>
-                <button class="btn-primary w-full">Save</button>
-                <button v-if="editingId" type="button" class="btn-danger w-full" @click="remove"><Icon name="trash" size="18" />Delete</button>
+                <button class="btn-primary w-full" :disabled="busy"><Spinner v-if="busy" />{{ busy ? 'Saving…' : 'Save' }}</button>
+                <button v-if="editingId" type="button" class="btn-danger w-full" :disabled="busy" @click="remove"><Icon name="trash" size="18" />Delete</button>
             </form>
         </Sheet>
     </div>

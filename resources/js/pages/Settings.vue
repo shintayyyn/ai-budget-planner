@@ -89,9 +89,12 @@ async function saveCategory() {
 
 async function deleteCategory() {
     if (!confirm(`Delete ${catForm.name}? Its transactions become uncategorised.`)) return;
-    await api.del(`/categories/${catForm.id}`);
-    categories.value = await api.get('/categories');
-    catOpen.value = false;
+    try {
+        await api.del(`/categories/${catForm.id}`);
+        categories.value = await api.get('/categories');
+        catOpen.value = false;
+        ui.toast('Category deleted');
+    } catch (e) { ui.error(e); }
 }
 
 async function exportCsv() {
@@ -124,6 +127,7 @@ async function logout() {
     await unloadModel();
     await auth.logout();
     router.replace('/login');
+    ui.toast('Signed out successfully. See you soon! 👋');
 }
 
 async function deleteAccount() {
@@ -131,6 +135,7 @@ async function deleteAccount() {
         await api.del('/profile', { password: deletePw.value });
         auth.clear();
         router.replace('/register');
+        ui.toast('Your account has been deleted');
     } catch (e) { ui.error(e); }
 }
 

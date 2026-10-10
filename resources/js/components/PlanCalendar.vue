@@ -44,7 +44,7 @@ async function add() {
         if (!res?.queued) { load(); ui.toast('Added to the calendar'); }
     } catch (e) { ui.error(e); }
 }
-async function remove(e) { if (!confirm(`Remove "${e.title}"?`)) return; try { await api.del(`${path.value}/${e.id}`); load(); } catch (err) { ui.error(err); } }
+async function remove(e) { if (!confirm(`Remove "${e.title}"?`)) return; try { await api.del(`${path.value}/${e.id}`); load(); ui.toast('Event removed'); } catch (err) { ui.error(err); } }
 </script>
 
 <template>
