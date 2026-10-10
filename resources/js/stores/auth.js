@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { api, token } from '../api';
 import { cache } from '../offline';
 import { wipeDevice, flush } from '../sync';
+import { resetReadiness } from '../readiness';
 
 export const useAuth = defineStore('auth', {
     state: () => ({ user: null, loaded: false }),
@@ -31,6 +32,7 @@ export const useAuth = defineStore('auth', {
         },
         async signedIn(res) {
             await wipeDevice();
+            resetReadiness();
             token.set(res.token);
             this.user = res.user;
             cache.set('/api/me', res.user);

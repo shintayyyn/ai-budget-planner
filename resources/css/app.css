@@ -94,3 +94,8 @@
     .toast-enter-active, .toast-leave-active, .toast-move { transition: none; }
     .loading-bar, .skeleton { animation: none; }
 }
+
+.sheet-pop-enter-active { transition: opacity .25s ease, transform .35s cubic-bezier(.32, .72, 0, 1); }
+.sheet-pop-leave-active { transition: opacity .2s ease, transform .2s ease-in; }
+.sheet-pop-enter-from, .sheet-pop-leave-to { opacity: 0; transform: translateY(16px); }
+@media (prefers-reduced-motion: reduce) { .sheet-pop-enter-active, .sheet-pop-leave-active { transition: none; } }
