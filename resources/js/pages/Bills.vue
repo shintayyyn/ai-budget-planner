@@ -95,7 +95,7 @@ const dueLabel = (b) => {
                 <button class="text-sm font-medium text-indigo-600" @click="edit(null)">+ Add</button>
             </div>
             <p v-if="!regular.length" class="py-3 text-sm text-slate-500">No bills yet.</p>
-            <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+            <TransitionGroup tag="ul" name="list" class="relative divide-y divide-slate-100 dark:divide-slate-800">
                 <li v-for="b in regular" :key="b.id" class="flex items-center gap-3 py-2.5">
                     <button class="min-w-0 flex-1 text-left" @click="edit(b)">
                         <p class="truncate text-sm font-medium">{{ b.category?.icon || '🧾' }} {{ b.name }}</p>
@@ -104,7 +104,7 @@ const dueLabel = (b) => {
                     <span class="text-sm font-semibold">{{ money(b.amount) }}</span>
                     <button v-if="!b.paid_this_cycle" class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium hover:bg-slate-200 dark:bg-slate-800" @click="pay(b)">Mark paid</button>
                 </li>
-            </ul>
+            </TransitionGroup>
         </section>
 
         <section class="card">
@@ -114,7 +114,7 @@ const dueLabel = (b) => {
             </div>
             <p class="mb-2 text-xs text-slate-500">Ordered by interest rate (avalanche method). Extra money should go to the top one first.</p>
             <p v-if="!debts.length" class="py-3 text-sm text-slate-500">No debts tracked. 🎉</p>
-            <ul class="space-y-3">
+            <TransitionGroup tag="ul" name="list" class="relative space-y-3">
                 <li v-for="(b, i) in debts" :key="b.id" class="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/60">
                     <div class="flex items-center gap-2">
                         <span v-if="i === 0" class="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">FOCUS</span>
@@ -128,7 +128,7 @@ const dueLabel = (b) => {
                     </p>
                     <button v-if="!b.paid_this_cycle" class="mt-2 rounded-lg bg-white px-2.5 py-1 text-xs font-medium ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700" @click="pay(b)">Mark payment made</button>
                 </li>
-            </ul>
+            </TransitionGroup>
         </section>
 
         <Sheet :open="open" :title="editingId ? 'Edit' : form.is_debt ? 'Add debt' : 'Add bill'" @close="open = false">

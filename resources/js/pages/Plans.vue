@@ -54,6 +54,7 @@ async function create() {
         });
         createOpen.value = false;
         Object.assign(form, blank());
+        if (plan?.queued) return;
         router.push(`/plans/${plan.id}${plan.visibility === 'group' ? '?invite=1' : ''}`);
     } catch (e) {
         errors.value = e.errors || {};

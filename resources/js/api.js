@@ -3,6 +3,7 @@
 // offline are queued in the outbox and synced when the device is back online.
 import { cache, newKey, describe } from './offline';
 import { enqueue } from './sync';
+import { applyOptimistic } from './optimistic';
 
 const TOKEN_KEY = 'abp_token';
 
@@ -37,44 +38,98 @@ function headersFor(body, key) {
 let onUnauthorized = () => {};
 export const setUnauthorizedHandler = (fn) => { onUnauthorized = fn; };
 
+// Saved reads are shown instantly and refreshed in the background, unless a
+// change has been made since they were fetched (then the network goes first).
+let writeGen = 0;
+const fetchedAt = new Map();
+const inflight = new Map();
+const lastNotice = new Map();
+const freshListeners = [];
+export const markWritten = () => { writeGen++; };
+/** Called when a background refresh brought newer data than what was shown. */
+export const onFresh = (fn) => freshListeners.push(fn);
+
+async function networkGet(url, cacheKey) {
+    if (inflight.has(cacheKey)) return inflight.get(cacheKey);
+    const gen = writeGen;
+    const run = (async () => {
+        let res;
+        try {
+            res = await fetch(url, { headers: headersFor(null, null) });
+        } catch {
+            const saved = await cache.get(cacheKey);
+            if (saved !== undefined) return saved;
+            throw offlineError();
+        }
+        if (isOfflineReply(res)) {
+            const saved = await cache.get(cacheKey);
+            if (saved !== undefined) return saved;
+            throw offlineError();
+        }
+        if (res.status === 401) onUnauthorized();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new ApiError(res.status, data);
+        await cache.set(cacheKey, data);
+        fetchedAt.set(cacheKey, gen);
+        return data;
+    })();
+    inflight.set(cacheKey, run);
+    try { return await run; } finally { inflight.delete(cacheKey); }
+}
+
+function revalidate(url, cacheKey, shown) {
+    networkGet(url, cacheKey).then((fresh) => {
+        if (JSON.stringify(fresh) === JSON.stringify(shown)) return;
+        const now = Date.now();
+        if (now - (lastNotice.get(cacheKey) || 0) < 15000) return;
+        lastNotice.set(cacheKey, now);
+        freshListeners.forEach((fn) => fn(cacheKey));
+    }).catch(() => {});
+}
+
 async function request(method, path, body, { query, raw } = {}) {
     const url = new URL(`/api${path}`, location.origin);
     Object.entries(query || {}).forEach(([k, v]) => v !== undefined && v !== null && v !== '' && url.searchParams.set(k, v));
 
     const isForm = body instanceof FormData;
     const cacheKey = url.pathname + url.search;
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+
+    if (method === 'GET' && !raw) {
+        const saved = await cache.get(cacheKey);
+        if (saved !== undefined) {
+            if (offline) return saved;
+            if ((fetchedAt.get(cacheKey) ?? 0) >= writeGen) {
+                revalidate(url, cacheKey, saved);
+                return saved;
+            }
+        }
+        return networkGet(url, cacheKey);
+    }
+
     const key = method === 'GET' ? null : newKey();
     const queueable = key && !isForm && !LIVE_ONLY.test(path) && !(method === 'DELETE' && path === '/profile');
     const queue = async () => {
+        await applyOptimistic(method, path, body, key);
         await enqueue({ id: key, method, path, query: query || null, body: body || null, at: Date.now(), label: describe(method, path, body) });
         return { queued: true, offline_id: key };
     };
 
-    if (queueable && typeof navigator !== 'undefined' && navigator.onLine === false) return queue();
+    if (queueable && offline) return queue();
 
     let res;
     try {
         res = await fetch(url, { method, headers: headersFor(body, key), body: body ? (isForm ? body : JSON.stringify(body)) : undefined });
     } catch (e) {
-        if (method === 'GET' && !raw) {
-            const saved = await cache.get(cacheKey);
-            if (saved !== undefined) return saved;
-            throw offlineError();
-        }
         if (queueable) return queue();
-        throw navigator.onLine === false ? offlineError() : e;
-    }
-    if (method === 'GET' && !raw && isOfflineReply(res)) {
-        const saved = await cache.get(cacheKey);
-        if (saved !== undefined) return saved;
-        throw offlineError();
+        throw offline ? offlineError() : e;
     }
     if (res.status === 401) onUnauthorized();
     if (raw) return res;
+    if (method !== 'GET' && res.ok) markWritten();
     if (res.status === 204) return null;
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new ApiError(res.status, data);
-    if (method === 'GET') cache.set(cacheKey, data);
     return data;
 }
 

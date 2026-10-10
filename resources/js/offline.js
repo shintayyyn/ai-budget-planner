@@ -32,6 +32,7 @@ export const cache = {
     get: (key) => run('kv', 'readonly', (s) => s.get(key)).catch(() => undefined),
     set: (key, value) => run('kv', 'readwrite', (s) => s.put(value, key)).catch(() => {}),
     clear: () => run('kv', 'readwrite', (s) => s.clear()).catch(() => {}),
+    keys: () => run('kv', 'readonly', (s) => s.getAllKeys()).then((r) => r || []).catch(() => []),
 };
 
 export const outbox = {

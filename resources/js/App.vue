@@ -9,7 +9,8 @@ import { sync, startSync, onSync } from './sync';
 import { invalidateContext } from './ai/assistant';
 import { useAuth } from './stores/auth';
 import { useUi } from './stores/ui';
-import { api } from './api';
+import { api, onFresh } from './api';
+import { prefetchPages } from './router';
 import { autoStart, ai } from './ai/engine';
 import { pref, setPref } from './format';
 
@@ -65,8 +66,12 @@ onSync('synced', (n) => {
     ui.toast(`Synced ${n} change${n === 1 ? '' : 's'} to the cloud ☁️`);
 });
 
+// A background refresh found newer data than what is on screen.
+onFresh(() => ui.changed());
+
 onMounted(() => {
     addEventListener('beforeinstallprompt', onBeforeInstall);
+    (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(prefetchPages);
     startSync();
     if (auth.loggedIn) autoStart();
 });
@@ -155,7 +160,9 @@ watch(() => route.query.add, (v) => {
 
             <main class="mx-auto w-full max-w-5xl px-4 pt-4 pb-28 md:px-8 md:pt-8 md:pb-10" :class="route.meta.full && '!pb-0'">
                 <RouterView v-slot="{ Component }">
-                    <component :is="Component" :key="route.path" />
+                    <Transition name="page" mode="out-in">
+                        <component :is="Component" :key="route.path" />
+                    </Transition>
                 </RouterView>
             </main>
         </div>

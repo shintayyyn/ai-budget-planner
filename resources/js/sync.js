@@ -3,7 +3,8 @@
 // dropped connection is never applied twice on the server.
 import { reactive } from 'vue';
 import { outbox, cache } from './offline';
-import { replay, token } from './api';
+import { replay, token, markWritten } from './api';
+import { tmpId } from './optimistic';
 
 const FAILED_KEY = 'amotan_sync_failed';
 const LAST_KEY = 'amotan_last_sync';
@@ -35,8 +36,12 @@ export async function flush() {
     if (sync.syncing || !navigator.onLine || !token.get()) return;
     sync.syncing = true;
     let done = 0;
+    // Changes made to something created offline point at its temporary id until the server assigns a real one.
+    const ids = {};
+    const real = (v) => (v == null ? v : JSON.parse(JSON.stringify(v).replace(/tmp-[\w-]+/g, (t) => ids[t] ?? t)));
     try {
-        for (const item of await outbox.all()) {
+        for (const queued of await outbox.all()) {
+            const item = { ...queued, path: queued.path.replace(/tmp-[\w-]+/g, (t) => ids[t] ?? t), body: real(queued.body) };
             let res;
             try { res = await replay(item); } catch { break; }
             // Not signed in, rate limited or a server hiccup: keep it and try later.
@@ -47,6 +52,10 @@ export async function flush() {
                 write(FAILED_KEY, sync.failed);
             } else {
                 done++;
+                if (item.method === 'POST') {
+                    const saved = await res.clone().json().catch(() => null);
+                    if (saved?.id) ids[tmpId(item.id)] = saved.id;
+                }
             }
             await outbox.remove(item.id);
         }
@@ -55,6 +64,7 @@ export async function flush() {
         await refreshPending();
     }
     if (done) {
+        markWritten();
         sync.lastSync = Date.now();
         write(LAST_KEY, sync.lastSync);
         listeners.synced.forEach((fn) => fn(done));

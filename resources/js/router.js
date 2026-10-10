@@ -40,6 +40,11 @@ router.beforeEach(async (to) => {
     document.title = to.meta.title ? `${to.meta.title} · Amotan` : 'Amotan';
 });
 
+/** Load every screen in the background so switching tabs is instant. */
+export function prefetchPages() {
+    for (const r of routes) if (typeof r.component === 'function') r.component().catch(() => {});
+}
+
 setUnauthorizedHandler(() => {
     const auth = useAuth();
     if (auth.user) {

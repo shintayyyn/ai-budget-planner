@@ -97,7 +97,7 @@ const ring = (pct) => `conic-gradient(#10b981 ${pct * 3.6}deg, rgb(148 163 184 /
             <p class="text-sm text-slate-500">Start with an emergency fund of 1–3 months of expenses.</p>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <TransitionGroup tag="div" name="list" class="relative grid gap-4 md:grid-cols-2">
             <section v-for="g in goals" :key="g.id" class="card">
                 <div class="flex items-start gap-4">
                     <div class="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full" :style="{ background: ring(g.projection.percent) }">
@@ -129,7 +129,7 @@ const ring = (pct) => `conic-gradient(#10b981 ${pct * 3.6}deg, rgb(148 163 184 /
                     <button class="btn-ghost !py-2" @click="edit(g)"><Icon name="edit" size="16" />Edit</button>
                 </div>
             </section>
-        </div>
+        </TransitionGroup>
 
         <Sheet :open="open" :title="editingId ? 'Edit goal' : 'New goal'" @close="open = false">
             <form class="space-y-3" @submit.prevent="save">
